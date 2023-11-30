@@ -1,0 +1,90 @@
+## Frame Ids
+frameId_map: "map"
+frameId_robot: "base_link"
+
+cloud_processor:
+  inputCloudTopic: "/velodyne_tilted/velodyne_points"
+  imuTopic: "/imu/data"
+  usePassthroughFilter: true
+  useVoxelDownSampling: false
+
+  ## Filter Area
+  lidarFilterAngle: 60.0
+  lidarMinRangeMeter: 0.0
+  lidarMaxRangeMeter: 20.0
+  lidarMinRangeMeterX: -10.0
+  lidarMaxRangeMeterX: 10.0
+  lidarMinRangeMeterY: -10.0
+  lidarMaxRangeMeterY: 10.0
+  lidarMinZ: -0.1
+  lidarMaxZ: 0.7
+
+  ## Voxel Filter
+  voxLeafX: 0.01
+  voxLeafY: 0.01
+  voxLeafZ: 0.01
+
+  ## Velodyne Ring
+  ringExtractionNum: 9
+  ringCloudTopic: "ring"
+
+terrain_mapping:
+  SubscribedTopic:
+    pointcloud: "/velodyne_tilted/velodyne_points"
+  PublishingTopic:
+    elevation_map: "map"
+
+  ElevationMap:
+    grid_resolution: 0.1
+    map_length_x: 12.0
+    map_length_y: 12.0
+
+  enableGlobalMapping: true
+
+traversability:
+  ## Grid map options
+  localMapMeterWidth: 10.0
+  localMapMeterHeight: 10.0
+  globalMapMeterWidth: 500.0
+  globalMapMeterHeight: 500.0
+
+  ## Feature Extraction
+  localGridSearchLength: 1
+  minNeighborRequired: 7
+
+  stepThreshold: 0.3 # meter
+  slopeThreshold: 21 # degree
+
+  ## Robot-dependent Variables
+  robotRadiusMeter: 0.15
+
+  ## Timer
+  globalMapUpdateTimeInterval: 0.1
+  featureMapUpdateTimeInterval: 0.1
+  loopRate: 10
+
+  ## Service
+  dataFolder: $(find traversability_mapping)/data/
+  saveMapService: "save_map"
+  cropMapService: "crop_map"
+  bagFileName: map/campus_test_image
+
+  saveWealyLabeledDataService: "save_weakly_labeled_data"
+  csvFileName: samples/campus_test
+
+  ## Weak Labeling
+
+  ## Visualization
+grid_map_visualization:
+  grid_map_topic: "/terrain_mapping/map_global"
+  grid_map_visualizations:
+    - name: elevation_cloud ## topic name
+      type: point_cloud
+      params:
+        layer: elevation ## elevation (point z)
+
+    - name: map_region
+      type: map_region
+      params:
+        color: 16777215
+        line_width: 0.1
