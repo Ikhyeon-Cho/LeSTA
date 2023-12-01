@@ -30,8 +30,6 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
-link_directories(${catkin_INCLUDE_DIRS})
-
 
 add_executable(terrain_mapping_node src/terrain_mapping_node.cpp
   src/terrain_mapping/TerrainMapping.cpp
@@ -42,5 +40,13 @@ add_executable(terrain_mapping_node src/terrain_mapping_node.cpp
 target_link_libraries(terrain_mapping_node
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
-  # isr_ros_utils
+)
+
+add_executable(traversability_mapping_node src/traversability_mapping_node.cpp
+  src/traversability_mapping/TraversabilityMapping.cpp
+  src/traversability_mapping/TraversabilityMap.cpp
+)
+target_link_libraries(traversability_mapping_node
+  ${PCL_LIBRARIES}
+  ${catkin_LIBRARIES}
 )

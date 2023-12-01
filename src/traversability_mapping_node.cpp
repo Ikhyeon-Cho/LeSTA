@@ -8,14 +8,14 @@
  */
 
 #include <ros/ros.h>
-#include "terrain_mapping/TerrainMapping.h"
+#include "traversability_mapping/TraversabilityMapping.h"
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "traversability_mapping_node");
   ros::NodeHandle nh("~");
 
-  ros::TerrainMapping node;
+  ros::TraversabilityMapping node;
 
   ros::spin();
 

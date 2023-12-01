@@ -7,8 +7,8 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#ifndef TRAVERSABILITY_MAPPING_TRAVERSABILITY_MAPPING_H
-#define TRAVERSABILITY_MAPPING_TRAVERSABILITY_MAPPING_H
+#ifndef ROS_TRAVERSABILITY_MAPPING_H
+#define ROS_TRAVERSABILITY_MAPPING_H
 
 #include <ros/ros.h>
 #include <isr_ros_utils/core/core.h>
@@ -29,7 +29,7 @@ public:
 
 public:
   // ROS Parameters: Node
-  roscpp::Parameter<std::string> elevation_map_topic{ "terrain_mapping/SubscribedTopic/descriptor_map",
+  roscpp::Parameter<std::string> elevation_map_topic{ "terrain_mapping/PublishingTopic/descriptor_map",
                                                       "map" };  // Check this when has no action
   roscpp::Parameter<std::string> traversability_map_topic{ "traversability_mapping/PublishingTopic/traversability_map",
                                                            "map" };
@@ -39,12 +39,14 @@ public:
   roscpp::Parameter<std::string> frameId_map{ "frameId_map", "map" };
 
   // Traversability Map
-  roscpp::Subscriber<grid_map_msgs::GridMap> elevation_map_subscriber{ elevation_map_topic.param(),
-                                                                      &TraversabilityMapping::estimateTraversability, this };
+  roscpp::Subscriber<grid_map_msgs::GridMap> elevation_map_subscriber{ "/terrain_mapping/" + elevation_map_topic.param(),
+                                                                       &TraversabilityMapping::estimateTraversability,
+                                                                       this };
+  roscpp::Publisher<grid_map_msgs::GridMap> traversability_map_publisher{ traversability_map_topic.param() };
 
 private:
-  TraversabilityMap map_;
+  TraversabilityMap traversability_map_;
 };
 }  // namespace ros
 
-#endif  // TRAVERSABILITY_MAPPING_TRAVERSABILITY_MAPPING_H
+#endif  // ROS_TRAVERSABILITY_MAPPING_H

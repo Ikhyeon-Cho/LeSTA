@@ -8,6 +8,7 @@
  */
 
 #include "traversability_mapping/TraversabilityMap.h"
+#include <iostream>
 
 TraversabilityMap::TraversabilityMap() : GridMap({ "elevation", "traversability_raw", "traversability_prob" })
 {
@@ -18,7 +19,8 @@ void TraversabilityMap::updateFrom(const grid_map::GridMap& elevation_map)
 {
   // Create map with fixed geometry
   setFrameId(elevation_map.getFrameId());
-  setGeometry(elevation_map.getLength(), elevation_map.getResolution(), elevation_map.getPosition());
+  setGeometry(elevation_map.getLength(), elevation_map.getResolution());
+  this->move(elevation_map.getPosition());
 
   // Copy elevation and terrain feature layer
   get("elevation") = grid_map::GridMap::Matrix(elevation_map.get("elevation"));
@@ -33,6 +35,7 @@ void TraversabilityMap::updateFrom(const grid_map::GridMap& elevation_map)
   const auto& roughness_layer = get("roughness");
   const auto& curvature_layer = get("curvature");
   const auto& variance_layer = get("variance");
+
   auto& traversabilityRaw_layer = get("traversability_raw");
   auto& traversabilityProb_layer = get("traversability_prob");
 
@@ -42,21 +45,20 @@ void TraversabilityMap::updateFrom(const grid_map::GridMap& elevation_map)
       continue;
 
     const auto& index = *iterator;
+
     const auto& step = step_layer(index(0), index(1));
     const auto& slope = slope_layer(index(0), index(1));
     const auto& roughness = roughness_layer(index(0), index(1));
     const auto& curvature = curvature_layer(index(0), index(1));
     const auto& variance = variance_layer(index(0), index(1));
 
-    Eigen::VectorXf feature;
+    Eigen::VectorXf feature(5);
     feature << step, slope, roughness, curvature, variance;
 
-    // traversability classification
     traversabilityRaw_layer(index(0), index(1)) = estimateTraversability(feature);
     // traversabilityProb_layer(index(0), index(1)) = 3;
   }
 
-  // Remove used layer
   erase("step");
   erase("slope");
   erase("roughness");
@@ -67,7 +69,9 @@ float TraversabilityMap::estimateTraversability(const Eigen::VectorXf& feature)
 {
   auto step(feature(0)), slope(feature(1)), roughness(feature(2)), curvature(feature(3)), variance(feature(4));
 
-  if 
+  if (feature.hasNaN())
+    return NAN;
+
   // Baseline method (for comparison)
   // Refer to: https://ieeexplore.ieee.org/abstract/document/7759199
   return 0.2 * getLinearStepRatio(step) + 0.8 * getLinearSlopeRatio(slope);
@@ -77,13 +81,13 @@ float TraversabilityMap::getLinearStepRatio(float step)
 {
   if (step > max_traversable_step_)
     return NON_TRAVERSABLE;
-  
+
   return (max_traversable_step_ - step) / (max_traversable_step_);
 }
 
 float TraversabilityMap::getLinearSlopeRatio(float slope)
 {
-    if (slope > max_traversable_slope_)
+  if (slope > max_traversable_slope_)
     return NON_TRAVERSABLE;
 
   return (max_traversable_slope_ - slope) / (max_traversable_slope_);
