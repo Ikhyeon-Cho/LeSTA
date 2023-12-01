@@ -2,44 +2,23 @@
 frameId_map: "map"
 frameId_robot: "base_link"
 
-cloud_processor:
-  inputCloudTopic: "/velodyne_tilted/velodyne_points"
-  imuTopic: "/imu/data"
-  usePassthroughFilter: true
-  useVoxelDownSampling: false
-
-  ## Filter Area
-  lidarFilterAngle: 60.0
-  lidarMinRangeMeter: 0.0
-  lidarMaxRangeMeter: 20.0
-  lidarMinRangeMeterX: -10.0
-  lidarMaxRangeMeterX: 10.0
-  lidarMinRangeMeterY: -10.0
-  lidarMaxRangeMeterY: 10.0
-  lidarMinZ: -0.1
-  lidarMaxZ: 0.7
-
-  ## Voxel Filter
-  voxLeafX: 0.01
-  voxLeafY: 0.01
-  voxLeafZ: 0.01
-
-  ## Velodyne Ring
-  ringExtractionNum: 9
-  ringCloudTopic: "ring"
-
 terrain_mapping:
   SubscribedTopic:
     pointcloud: "/velodyne_tilted/velodyne_points"
   PublishingTopic:
     elevation_map: "map"
+    descriptor_map: "descriptor"
 
   ElevationMap:
     grid_resolution: 0.1
     map_length_x: 12.0
     map_length_y: 12.0
 
-  enableGlobalMapping: true
+  PoseUpdate:
+    duration: 0.05 ## 20Hz
+
+  FeatureExtraction:
+    duration: 0.1  ## 10Hz
 
 traversability:
   ## Grid map options
