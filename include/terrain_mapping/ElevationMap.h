@@ -23,6 +23,7 @@ public:
 
   ElevationMap();
   ElevationMap(double length_x, double length_y, double grid_resolution);
+  void update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud);
 
   const grid_map::GridMap::Matrix& getElevationLayer() const;
   grid_map::GridMap::Matrix& getElevationLayer();
@@ -34,18 +35,17 @@ public:
   grid_map::GridMap::Matrix& getNumMeasuredPointsLayer();
 
   bool isEmptyAt(const grid_map::Index& index) const;
-
-  void update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud);
+  bool isEmptyAt(const std::string& layer, const grid_map::Index& index) const;
 
   void smoothing();
   // void rayCasting(const grid_map::Position3 &robotPosition3);
 
-private:
-  pcl::PointCloud<PointXYZR>::Ptr getDownsampledCloudPerGrid(const pcl::PointCloud<PointXYZR>& _pointCloud);
+private:  // Helper Functions
+  pcl::PointCloud<PointXYZR>::Ptr getDownsampledCloudAtGrid(const pcl::PointCloud<PointXYZR>& pointcloud);
 
-  void estimateSampleVariance(const pcl::PointCloud<PointXYZR>& _pointCloud);
+  void updateElevation(const pcl::PointCloud<PointXYZR>& pointcloud);
 
-  // cloud processor is needed
+  void updateSampleVariance(const pcl::PointCloud<PointXYZR>& pointcloud);
 };
 
 #endif

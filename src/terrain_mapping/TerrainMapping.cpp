@@ -13,25 +13,27 @@ namespace ros
 {
 TerrainMapping::TerrainMapping()
 {
+  pose_update_timer.start();
 }
 
-void TerrainMapping::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
+void TerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
   pcl::PointCloud<pcl::PointXYZI>::Ptr cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZI>>();
   pcl::fromROSMsg(*msg, *cloud);  // moveFromROSMsg is a bit faster (100 ~ 200 microsec) than fromROSMsg
 
-  // processPointcloud(*cloud);
+  // Transform Pointcloud
+  bool transform_success;
+  auto transformed_cloud = pointcloud_processor_.transformPointcloud(cloud, map_.getFrameId(), transform_success);
+  if (!transform_success)
+    return;
 
-  map_.update(*cloud);
+  // Update
+  map_.update(*transformed_cloud);
 
+  // Map Visualization
   grid_map_msgs::GridMap msg_gridmap;
   grid_map::GridMapRosConverter::toMessage(map_, msg_gridmap);
   elevation_map_publisher.publish(msg_gridmap);
-}
-
-// TODO: no void (return cloud)
-void TerrainMapping::processPointcloud(const pcl::PointCloud<pcl::PointXYZI>& pointcloud)
-{
 }
 
 void TerrainMapping::updatePose(const ros::TimerEvent& event)

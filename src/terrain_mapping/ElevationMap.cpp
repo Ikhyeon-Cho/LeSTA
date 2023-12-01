@@ -16,6 +16,8 @@ ElevationMap::ElevationMap(double length_x, double length_y, double grid_resolut
   setFrameId("map");
   setGeometry(grid_map::Length(length_x, length_y), grid_resolution);
   setBasicLayers({ "elevation", "variance" });
+  get("elevation").setConstant(1);
+  get("variance").setConstant(1);
 }
 
 ElevationMap::ElevationMap() : ElevationMap(20, 20, 0.1)
@@ -24,51 +26,118 @@ ElevationMap::ElevationMap() : ElevationMap(20, 20, 0.1)
 
 void ElevationMap::update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud)
 {
-  // Maybe We can transform the pointclouds to the map frame and update them
   if (pointcloud.header.frame_id != getFrameId())
   {
-    std::cout << "point cloud frame is " << pointcloud.header.frame_id << " but elevation map has " << getFrameId()
-              << ". Skip updating map. \n";
+    std::cout << " [ElevationMap] Warning: Frame ID mismatch - pointcloud is in a different frame! \n";
     return;
   }
-
   if (pointcloud.empty())
   {
-    std::cout << "point cloud is Empty. Skip updating map. \n";
+    std::cout << " [ElevationMap] Warning: Skipping map update - point cloud is empty! \n";
     return;
   }
 
   // 1. Remove duplicated points in grid
-  auto downsampled_cloudPtr = getDownsampledCloudPerGrid(pointcloud);
+  auto downsampled_cloudPtr = getDownsampledCloudAtGrid(pointcloud);
 
   // 2. update grid cell height estimates
-  auto& elevation_layer = getElevationLayer();
-  auto& variance_layer = getVarianceLayer();
-  auto& nPoint_layer = getNumMeasuredPointsLayer();
+  updateElevation(*downsampled_cloudPtr);
 
-  for (const auto& point : *downsampled_cloudPtr)
+  // 3. height sample variance : for visualization
+  updateSampleVariance(*downsampled_cloudPtr);
+}
+
+pcl::PointCloud<pcl::PointXYZI>::Ptr
+ElevationMap::getDownsampledCloudAtGrid(const pcl::PointCloud<PointXYZR>& pointcloud)
+{
+  const std::string maxHeight_layer("max_height");
+  const std::string pointVariance_layer("point_variance");
+
+  add(maxHeight_layer);  // Buffer layer required for comparing point heights at the same grid
+  add(pointVariance_layer);
+
+  auto& maxHeight_layer_data = get(maxHeight_layer);
+  auto& pointVariance_layer_data = get(pointVariance_layer);
+
+  // Create a set to keep track of unique grid indices.
+  std::vector<grid_map::Index> measured_index_list;
+  for (const auto& point : pointcloud)
+  {
+    // Check whether point is inside the map
+    grid_map::Index index;
+    if (!getIndex(grid_map::Position(point.x, point.y), index))
+      continue;
+
+    // First grid height measuerment
+    if (isEmptyAt(maxHeight_layer, index))
+    {
+      at(maxHeight_layer, index) = point.z;
+      at(pointVariance_layer, index) = point.intensity;
+      measured_index_list.push_back(index);
+    }
+    else if (point.z > maxHeight_layer_data(index(0), index(1)))
+    {
+      maxHeight_layer_data(index(0), index(1)) = point.z;
+      pointVariance_layer_data(index(0), index(1)) = point.intensity;
+    }
+  }  // pointcloud loop ends
+
+  // Get overrided point height (per grid) >> saved in downsampled_cloud
+  pcl::PointCloud<PointXYZR>::Ptr downsampled_cloud = boost::make_shared<pcl::PointCloud<PointXYZR>>();
+  downsampled_cloud->header = pointcloud.header;
+  downsampled_cloud->reserve(measured_index_list.size());
+  for (const auto& index : measured_index_list)
+  {
+    grid_map::Position3 grid_position3D;
+    getPosition3(maxHeight_layer, index, grid_position3D);
+
+    PointXYZR point;
+    point.x = grid_position3D.x();
+    point.y = grid_position3D.y();
+    point.z = grid_position3D.z();
+    point.intensity = pointVariance_layer_data(index(0), index(1));
+
+    downsampled_cloud->push_back(point);
+  }
+
+  erase(maxHeight_layer);
+  erase(pointVariance_layer);
+
+  return downsampled_cloud;
+}
+
+void ElevationMap::updateElevation(const pcl::PointCloud<PointXYZR>& pointcloud)
+{
+  const std::string elevation_layer("elevation");
+  const std::string variance_layer("variance");
+  const std::string nPoint_layer("n_point");
+  auto& elevation_layer_data = getElevationLayer();
+  auto& variance_layer_data = getVarianceLayer();
+  auto& nPoint_layer_data = getNumMeasuredPointsLayer();
+
+  for (const auto& point : pointcloud)
   {
     const auto& point_variance = point.intensity;
 
     // Check whether point is inside the map (redundant but ok)
-    grid_map::Index grid_index;
-    if (!getIndex(grid_map::Position(point.x, point.y), grid_index))
+    grid_map::Index index;
+    if (!getIndex(grid_map::Position(point.x, point.y), index))
       continue;
 
     // First grid height measuerment
-    if (isEmptyAt(grid_index))
+    if (isEmptyAt(index))
     {
-      at("elevation", grid_index) = point.z;
-      at("variance", grid_index) = point.intensity;
-      at("n_point", grid_index) = 1;
+      at(elevation_layer, index) = point.z;
+      at(variance_layer, index) = point.intensity;
+      at(nPoint_layer, index) = 1;
       continue;
     }
 
-    auto& elevation = elevation_layer(grid_index(0), grid_index(1));
-    auto& variance = variance_layer(grid_index(0), grid_index(1));
-    auto& n_point = nPoint_layer(grid_index(0), grid_index(1));
+    auto& elevation = elevation_layer_data(index(0), index(1));
+    auto& variance = variance_layer_data(index(0), index(1));
+    auto& n_point = nPoint_layer_data(index(0), index(1));
 
-    // reject dynamic obstacle : mahalanobis distance
+    // reject dynamic obstacle >> TODO: use mahalanobis distance
     if (std::abs(elevation - point.z) > 0.2)
       continue;
 
@@ -77,109 +146,41 @@ void ElevationMap::update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud)
     variance = variance * point_variance / (variance + point_variance);
     n_point += 1;
   }
-
-  // 3. height sample variance : for visualization
-  estimateSampleVariance(pointcloud);
-}
-
-pcl::PointCloud<pcl::PointXYZI>::Ptr
-ElevationMap::getDownsampledCloudPerGrid(const pcl::PointCloud<PointXYZR>& pointcloud)
-{
-  add("max_height");  // Buffer layer required for comparing point heights at the same grid
-  add("point_variance");
-  auto& max_height_layer = get("max_height");
-  auto& point_variance_layer = get("point_variance");
-
-  std::vector<grid_map::Index> measured_index_list;
-  measured_index_list.reserve(pointcloud.size());
-  for (const auto& point : pointcloud)
-  {
-    // Check whether point is inside the map
-    grid_map::Index grid_index;
-    if (!getIndex(grid_map::Position(point.x, point.y), grid_index))
-      continue;
-
-    // First grid height measuerment
-    if (!isValid(grid_index, "max_height"))
-    {
-      at("max_height", grid_index) = point.z;
-      at("point_variance", grid_index) = point.intensity;
-      measured_index_list.push_back(grid_index);
-      continue;
-    }
-
-    // Override max point height in grid cell
-    auto& logged_maxHeight = max_height_layer(grid_index(0), grid_index(1));
-    auto& logged_point_variance = point_variance_layer(grid_index(0), grid_index(1));
-
-    if (point.z > logged_maxHeight)
-    {
-      logged_maxHeight = point.z;
-      logged_point_variance = point.intensity;
-    }
-  }  // pointcloud loop ends
-
-  // Get overrided point height (per grid) >> saved in downsampled_cloud
-  pcl::PointCloud<PointXYZR>::Ptr downsampled_cloud = boost::make_shared<pcl::PointCloud<PointXYZR>>();
-  downsampled_cloud->header = pointcloud.header;
-  downsampled_cloud->reserve(measured_index_list.size());
-  for (const auto& grid_index : measured_index_list)
-  {
-    // alias
-    auto& logged_maxHeight = max_height_layer(grid_index(0), grid_index(1));
-    auto& logged_point_variance = point_variance_layer(grid_index(0), grid_index(1));
-
-    PointXYZR point;
-    grid_map::Position3 grid_position3D;
-    getPosition3("max_height", grid_index, grid_position3D);
-    point.x = grid_position3D.x();
-    point.y = grid_position3D.y();
-    point.z = grid_position3D.z();
-    point.intensity = logged_point_variance;
-
-    downsampled_cloud->push_back(point);
-  }
-
-  erase("max_height");
-  erase("point_variance");
-
-  return downsampled_cloud;
 }
 
 // Later Can be moved inside of downsampling function for efficiency.
 // Currently implemented with seperate function for modularization
-void ElevationMap::estimateSampleVariance(const pcl::PointCloud<PointXYZR>& pointcloud)
+void ElevationMap::updateSampleVariance(const pcl::PointCloud<PointXYZR>& pointcloud)
 {
-  auto& sampleMean_layer = get("sample_mean");
-  auto& sampleVariance_layer = get("sample_variance");
-  auto& numSample_layer = get("n_sample");
+  auto& sampleMean_layer_data = get("sample_mean");
+  auto& sampleVariance_layer_data = get("sample_variance");
+  auto& numSample_layer_data = get("n_sample");
 
   for (const auto& point : pointcloud)
   {
     // Check whether point is inside the map
-    grid_map::Index grid_index;
-    if (!getIndex(grid_map::Position(point.x, point.y), grid_index))
+    grid_map::Index index;
+    if (!getIndex(grid_map::Position(point.x, point.y), index))
       continue;
 
     // First grid height measuerment
-    if (!isValid(grid_index, "n_sample"))
+    if (isEmptyAt("n_sample", index))
     {
-      at("n_sample", grid_index) = 1;
-      at("sample_mean", grid_index) = point.z;
-      at("sample_variance", grid_index) = 0;
+      at("n_sample", index) = 1;
+      at("sample_mean", index) = point.z;
+      at("sample_variance", index) = 0;
       continue;
     }
 
     // alias
-    auto& n_sample = numSample_layer(grid_index(0), grid_index(1));
-    auto& sample_maen = sampleMean_layer(grid_index(0), grid_index(1));
-    auto& sample_variance = sampleVariance_layer(grid_index(0), grid_index(1));
+    auto& n_sample = numSample_layer_data(index(0), index(1));
+    auto& sample_maen = sampleMean_layer_data(index(0), index(1));
+    auto& sample_variance = sampleVariance_layer_data(index(0), index(1));
 
     // recursive update of mean and variance:
     // https://math.stackexchange.com/questions/374881/recursive-formula-for-variance
-    auto prev_sample_mean = sample_maen;
-
     n_sample += 1;
+    auto prev_sample_mean = sample_maen;
     sample_maen = sample_maen + (point.z - sample_maen) / n_sample;
     sample_variance = sample_variance + std::pow(prev_sample_mean, 2) - std::pow(sample_maen, 2) +
                       (std::pow(point.z, 2) - sample_variance - std::pow(prev_sample_mean, 2)) / n_sample;
@@ -263,6 +264,11 @@ grid_map::GridMap::Matrix& ElevationMap::getNumMeasuredPointsLayer()
 bool ElevationMap::isEmptyAt(const grid_map::Index& index) const
 {
   return !isValid(index);
+}
+
+bool ElevationMap::isEmptyAt(const std::string& layer, const grid_map::Index& index) const
+{
+  return !std::isfinite(at(layer, index));
 }
 
 // // Note: Only for local map

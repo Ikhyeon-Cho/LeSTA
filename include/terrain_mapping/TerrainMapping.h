@@ -29,9 +29,7 @@ class TerrainMapping
 public:
   TerrainMapping();
 
-  void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
-
-  void processPointcloud(const pcl::PointCloud<pcl::PointXYZI>& pointcloud);
+  void updateMap(const sensor_msgs::PointCloud2ConstPtr& msg);
 
   void updatePose(const ros::TimerEvent& event);
 
@@ -46,7 +44,7 @@ public:
 
   // Elevation Map
   roscpp::Subscriber<sensor_msgs::PointCloud2> pointcloud_subscriber{ pointcloud_topic.param(),
-                                                                      &TerrainMapping::pointcloudCallback, this };
+                                                                      &TerrainMapping::updateMap, this };
   roscpp::Publisher<grid_map_msgs::GridMap> elevation_map_publisher{ elevation_map_topic.param() };
 
   roscpp::Parameter<double> grid_resolution{ "terrain_mapping/ElevationMap/grid_resolution", 0.1 };
@@ -60,7 +58,7 @@ public:
 
 private:
   ElevationMap map_{ map_length_x.param(), map_length_y.param(), grid_resolution.param() };
-  
+
   TransformHandler transform_handler_;
   PointcloudProcessor<pcl::PointXYZI> pointcloud_processor_;
 };
