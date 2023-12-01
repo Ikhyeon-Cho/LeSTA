@@ -20,7 +20,10 @@ terrain_mapping:
   FeatureExtraction:
     duration: 0.1  ## 10Hz
 
-traversability:
+traversability_mapping:
+  PublishingTopic:
+    traversability_map: "map"
+
   ## Grid map options
   localMapMeterWidth: 10.0
   localMapMeterHeight: 10.0

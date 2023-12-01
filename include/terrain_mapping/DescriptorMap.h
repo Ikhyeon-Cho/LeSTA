@@ -7,11 +7,11 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#include <grid_map_core/grid_map_core.hpp>
-#include <Eigen/Dense>
-
 #ifndef TRAVERSABILITY_MAPPING_DESCRIPTOR_MAP_H
 #define TRAVERSABILITY_MAPPING_DESCRIPTOR_MAP_H
+
+#include <grid_map_core/grid_map_core.hpp>
+#include <Eigen/Dense>
 
 class TerrainDescriptor
 {
