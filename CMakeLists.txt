@@ -36,6 +36,7 @@ link_directories(${catkin_INCLUDE_DIRS})
 add_executable(terrain_mapping_node src/terrain_mapping_node.cpp
   src/terrain_mapping/TerrainMapping.cpp
   src/terrain_mapping/ElevationMap.cpp
+  src/terrain_mapping/DescriptorMap.cpp
   
 )
 target_link_libraries(terrain_mapping_node

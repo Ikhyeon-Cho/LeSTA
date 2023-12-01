@@ -21,6 +21,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "terrain_mapping/ElevationMap.h"
+#include "terrain_mapping/DescriptorMap.h"
 
 namespace ros
 {
@@ -33,10 +34,13 @@ public:
 
   void updatePose(const ros::TimerEvent& event);
 
+  void extractFeatures(const ros::TimerEvent& event);
+
 public:
   // ROS Parameters: Node
   roscpp::Parameter<std::string> pointcloud_topic{ "terrain_mapping/SubscribedTopic/pointcloud", "/velodyne_points" };
   roscpp::Parameter<std::string> elevation_map_topic{ "terrain_mapping/PublishingTopic/elevation_map", "map" };
+  roscpp::Parameter<std::string> descriptor_map_topic{ "terrain_mapping/PublishingTopic/descriptor_map", "descriptor" };
 
   // ROS Parameters : Framd Ids
   roscpp::Parameter<std::string> frameId_robot{ "frameId_robot", "base_link" };
@@ -52,12 +56,18 @@ public:
   roscpp::Parameter<double> map_length_y{ "terrain_mapping/ElevationMap/map_length_y", 12 };
 
   // Pose update
-  roscpp::Parameter<double> pose_update_duration{ "terrain_mapping/Transform/pose_update_duration",
-                                                  0.05 };  // expect 20Hz
+  roscpp::Parameter<double> pose_update_duration{ "terrain_mapping/PoseUpdate/duration", 0.05 };  // expect 20Hz
   roscpp::Timer pose_update_timer{ pose_update_duration.param(), &TerrainMapping::updatePose, this };
+
+  // Feature extraction
+  roscpp::Parameter<double> feature_extraction_duration{ "terrain_maping/FeatureExtraction/duration", 0.1 };
+  roscpp::Timer feature_extraction_timer{ feature_extraction_duration.param(), &TerrainMapping::extractFeatures, this };
+  roscpp::Publisher<grid_map_msgs::GridMap> descriptor_map_publisher{ descriptor_map_topic.param() };
+
 
 private:
   ElevationMap map_{ map_length_x.param(), map_length_y.param(), grid_resolution.param() };
+  DescriptorMap map_descriptor_{map_};
 
   TransformHandler transform_handler_;
   PointcloudProcessor<pcl::PointXYZI> pointcloud_processor_;

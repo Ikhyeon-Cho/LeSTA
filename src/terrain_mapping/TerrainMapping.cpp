@@ -14,6 +14,7 @@ namespace ros
 TerrainMapping::TerrainMapping()
 {
   pose_update_timer.start();
+  feature_extraction_timer.start();
 }
 
 void TerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -43,6 +44,16 @@ void TerrainMapping::updatePose(const ros::TimerEvent& event)
     return;
 
   map_.move(grid_map::Position(base_in_mapFrame.transform.translation.x, base_in_mapFrame.transform.translation.y));
+}
+
+void TerrainMapping::extractFeatures(const ros::TimerEvent& event)
+{
+  map_descriptor_.update(map_);
+
+  // Descriptor Map Visualization
+  grid_map_msgs::GridMap msg;
+  grid_map::GridMapRosConverter::toMessage(map_descriptor_, msg);
+  descriptor_map_publisher.publish(msg);
 }
 
 }  // namespace ros
