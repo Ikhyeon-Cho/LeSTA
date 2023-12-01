@@ -60,7 +60,7 @@ public:
   roscpp::Timer pose_update_timer{ pose_update_duration.param(), &TerrainMapping::updatePose, this };
 
   // Feature extraction
-  roscpp::Parameter<double> feature_extraction_duration{ "terrain_maping/FeatureExtraction/duration", 0.1 };
+  roscpp::Parameter<double> feature_extraction_duration{ "terrain_mapping/FeatureExtraction/duration", 0.1 };
   roscpp::Timer feature_extraction_timer{ feature_extraction_duration.param(), &TerrainMapping::extractFeatures, this };
   roscpp::Publisher<grid_map_msgs::GridMap> descriptor_map_publisher{ descriptor_map_topic.param() };
 
