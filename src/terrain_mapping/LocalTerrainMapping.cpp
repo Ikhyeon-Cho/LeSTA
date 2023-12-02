@@ -1,5 +1,5 @@
 /*
- * TerrainMapping.cpp
+ * LocalTerrainMapping.cpp
  *
  *  Created on: Aug 17, 2023
  *      Author: Ikhyeon Cho
@@ -7,17 +7,17 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#include "terrain_mapping/TerrainMapping.h"
+#include "terrain_mapping/LocalTerrainMapping.h"
 
 namespace ros
 {
-TerrainMapping::TerrainMapping()
+LocalTerrainMapping::LocalTerrainMapping()
 {
   pose_update_timer.start();
   feature_extraction_timer.start();
 }
 
-void TerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
+void LocalTerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
   pcl::PointCloud<pcl::PointXYZI>::Ptr cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZI>>();
   pcl::fromROSMsg(*msg, *cloud);  // moveFromROSMsg is a bit faster (100 ~ 200 microsec) than fromROSMsg
@@ -37,7 +37,7 @@ void TerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
   elevation_map_publisher.publish(msg_gridmap);
 }
 
-void TerrainMapping::updatePose(const ros::TimerEvent& event)
+void LocalTerrainMapping::updatePose(const ros::TimerEvent& event)
 {
   geometry_msgs::TransformStamped base_in_mapFrame;
   if (!transform_handler_.getTransform(frameId_map.param(), frameId_robot.param(), base_in_mapFrame))
@@ -46,7 +46,7 @@ void TerrainMapping::updatePose(const ros::TimerEvent& event)
   map_.move(grid_map::Position(base_in_mapFrame.transform.translation.x, base_in_mapFrame.transform.translation.y));
 }
 
-void TerrainMapping::extractFeatures(const ros::TimerEvent& event)
+void LocalTerrainMapping::extractFeatures(const ros::TimerEvent& event)
 {
   map_descriptor_.update(map_);
 

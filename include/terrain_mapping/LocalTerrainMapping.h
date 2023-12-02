@@ -1,5 +1,5 @@
 /*
- * TerrainMapping.h
+ * LocalTerrainMapping.h
  *
  *  Created on: Aug 17, 2023
  *      Author: Ikhyeon Cho
@@ -25,10 +25,10 @@
 
 namespace ros
 {
-class TerrainMapping
+class LocalTerrainMapping
 {
 public:
-  TerrainMapping();
+  LocalTerrainMapping();
 
   void updateMap(const sensor_msgs::PointCloud2ConstPtr& msg);
 
@@ -48,7 +48,7 @@ public:
 
   // Elevation Map
   roscpp::Subscriber<sensor_msgs::PointCloud2> pointcloud_subscriber{ pointcloud_topic.param(),
-                                                                      &TerrainMapping::updateMap, this };
+                                                                      &LocalTerrainMapping::updateMap, this };
   roscpp::Publisher<grid_map_msgs::GridMap> elevation_map_publisher{ elevation_map_topic.param() };
 
   roscpp::Parameter<double> grid_resolution{ "terrain_mapping/ElevationMap/grid_resolution", 0.1 };
@@ -57,11 +57,11 @@ public:
 
   // Pose update
   roscpp::Parameter<double> pose_update_duration{ "terrain_mapping/PoseUpdate/duration", 0.05 };  // expect 20Hz
-  roscpp::Timer pose_update_timer{ pose_update_duration.param(), &TerrainMapping::updatePose, this };
+  roscpp::Timer pose_update_timer{ pose_update_duration.param(), &LocalTerrainMapping::updatePose, this };
 
   // Feature extraction
   roscpp::Parameter<double> feature_extraction_duration{ "terrain_mapping/FeatureExtraction/duration", 0.1 };
-  roscpp::Timer feature_extraction_timer{ feature_extraction_duration.param(), &TerrainMapping::extractFeatures, this };
+  roscpp::Timer feature_extraction_timer{ feature_extraction_duration.param(), &LocalTerrainMapping::extractFeatures, this };
   roscpp::Publisher<grid_map_msgs::GridMap> descriptor_map_publisher{ descriptor_map_topic.param() };
 
 

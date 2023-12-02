@@ -31,13 +31,13 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(terrain_mapping_node src/terrain_mapping_node.cpp
-  src/terrain_mapping/TerrainMapping.cpp
+add_executable(local_terrain_mapping_node src/local_terrain_mapping_node.cpp
+  src/terrain_mapping/LocalTerrainMapping.cpp
   src/terrain_mapping/ElevationMap.cpp
   src/terrain_mapping/DescriptorMap.cpp
   
 )
-target_link_libraries(terrain_mapping_node
+target_link_libraries(local_terrain_mapping_node
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
 )

@@ -8,14 +8,14 @@
  */
 
 #include <ros/ros.h>
-#include "terrain_mapping/TerrainMapping.h"
+#include "terrain_mapping/LocalTerrainMapping.h"
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "terrain_mapping_node");
   ros::NodeHandle nh("~");
 
-  ros::TerrainMapping node;
+  ros::LocalTerrainMapping node;
 
   ros::spin();
 
