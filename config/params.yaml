@@ -2,7 +2,7 @@
 frameId_map: "map"
 frameId_robot: "base_link"
 
-terrain_mapping:
+local_terrain_mapping:
   SubscribedTopic:
     pointcloud: "/velodyne_tilted/velodyne_points"
   PublishingTopic:

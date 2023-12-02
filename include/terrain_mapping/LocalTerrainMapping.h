@@ -7,8 +7,8 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#ifndef ROS_TERRAIN_MAPPING_H
-#define ROS_TERRAIN_MAPPING_H
+#ifndef ROS_LOCAL_TERRAIN_MAPPING_H
+#define ROS_LOCAL_TERRAIN_MAPPING_H
 
 #include <ros/ros.h>
 
@@ -38,9 +38,9 @@ public:
 
 public:
   // ROS Parameters: Node
-  roscpp::Parameter<std::string> pointcloud_topic{ "terrain_mapping/SubscribedTopic/pointcloud", "/velodyne_points" };
-  roscpp::Parameter<std::string> elevation_map_topic{ "terrain_mapping/PublishingTopic/elevation_map", "map" };
-  roscpp::Parameter<std::string> descriptor_map_topic{ "terrain_mapping/PublishingTopic/descriptor_map", "descriptor" };
+  roscpp::Parameter<std::string> pointcloud_topic{ "local_terrain_mapping/SubscribedTopic/pointcloud", "/velodyne_points" };
+  roscpp::Parameter<std::string> elevation_map_topic{ "local_terrain_mapping/PublishingTopic/elevation_map", "map" };
+  roscpp::Parameter<std::string> descriptor_map_topic{ "local_terrain_mapping/PublishingTopic/descriptor_map", "descriptor" };
 
   // ROS Parameters : Framd Ids
   roscpp::Parameter<std::string> frameId_robot{ "frameId_robot", "base_link" };
@@ -51,16 +51,16 @@ public:
                                                                       &LocalTerrainMapping::updateMap, this };
   roscpp::Publisher<grid_map_msgs::GridMap> elevation_map_publisher{ elevation_map_topic.param() };
 
-  roscpp::Parameter<double> grid_resolution{ "terrain_mapping/ElevationMap/grid_resolution", 0.1 };
-  roscpp::Parameter<double> map_length_x{ "terrain_mapping/ElevationMap/map_length_x", 12 };
-  roscpp::Parameter<double> map_length_y{ "terrain_mapping/ElevationMap/map_length_y", 12 };
+  roscpp::Parameter<double> grid_resolution{ "local_terrain_mapping/ElevationMap/grid_resolution", 0.1 };
+  roscpp::Parameter<double> map_length_x{ "local_terrain_mapping/ElevationMap/map_length_x", 12 };
+  roscpp::Parameter<double> map_length_y{ "local_terrain_mapping/ElevationMap/map_length_y", 12 };
 
   // Pose update
-  roscpp::Parameter<double> pose_update_duration{ "terrain_mapping/PoseUpdate/duration", 0.05 };  // expect 20Hz
+  roscpp::Parameter<double> pose_update_duration{ "local_terrain_mapping/PoseUpdate/duration", 0.05 };  // expect 20Hz
   roscpp::Timer pose_update_timer{ pose_update_duration.param(), &LocalTerrainMapping::updatePose, this };
 
   // Feature extraction
-  roscpp::Parameter<double> feature_extraction_duration{ "terrain_mapping/FeatureExtraction/duration", 0.1 };
+  roscpp::Parameter<double> feature_extraction_duration{ "local_terrain_mapping/FeatureExtraction/duration", 0.1 };
   roscpp::Timer feature_extraction_timer{ feature_extraction_duration.param(), &LocalTerrainMapping::extractFeatures, this };
   roscpp::Publisher<grid_map_msgs::GridMap> descriptor_map_publisher{ descriptor_map_topic.param() };
 
