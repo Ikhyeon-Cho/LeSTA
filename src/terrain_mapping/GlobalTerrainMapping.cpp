@@ -28,7 +28,7 @@ void GlobalTerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg
     return;
 
   // Filter Pointcloud: only use short-range data
-  auto height_filtered_cloud = pointcloud_processor_.filterPointcloudByAxis(cloud, "z", -0.6, 0.6);
+  auto height_filtered_cloud = pointcloud_processor_.filterPointcloudByAxis(base_cloud, "z", -0.6, 0.6);
   auto local_cloud = pointcloud_processor_.filterPointcloudByRange2D(height_filtered_cloud, 0.5, 10);
 
   bool has_transformToMap;
