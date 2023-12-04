@@ -10,7 +10,10 @@
 #ifndef TRAVERSABILITY_MAPPING_DESCRIPTOR_MAP_H
 #define TRAVERSABILITY_MAPPING_DESCRIPTOR_MAP_H
 
+#include "terrain_mapping/ElevationMap.h"
 #include <grid_map_core/grid_map_core.hpp>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 #include <Eigen/Dense>
 
 class TerrainDescriptor
@@ -37,17 +40,17 @@ private:
   double trace_;
 };
 
-class DescriptorMap : public grid_map::GridMap
+class DescriptorMap : public ElevationMap
 {
 public:
   DescriptorMap();
   DescriptorMap(const grid_map::GridMap& map);
   void setElevationMap(const grid_map::GridMap& map);
 
-  void update(const grid_map::GridMap& elevation_map);
+  void update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud);
 
 private:
-  bool estimateNormalAt(const grid_map::Index& index, TerrainDescriptor& descriptor);
+  bool extractDescriptorAt(const grid_map::Index& index, TerrainDescriptor& descriptor);
 
   double local_radius_{ 0.15 };  // 15cm radius circle as local area
 };

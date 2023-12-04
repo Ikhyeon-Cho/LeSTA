@@ -23,6 +23,7 @@ public:
 
   ElevationMap();
   ElevationMap(double length_x, double length_y, double grid_resolution);
+  ElevationMap(const std::vector<std::string>& layers);
   void update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud);
 
   const grid_map::GridMap::Matrix& getElevationLayer() const;

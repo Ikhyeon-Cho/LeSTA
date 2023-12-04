@@ -14,7 +14,6 @@ namespace ros
 LocalTerrainMapping::LocalTerrainMapping()
 {
   pose_update_timer.start();
-  feature_extraction_timer.start();
 }
 
 void LocalTerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -28,13 +27,21 @@ void LocalTerrainMapping::updateMap(const sensor_msgs::PointCloud2ConstPtr& msg)
   if (!transform_success)
     return;
 
-  // Update
+  // Update Elevation map
   map_.update(*transformed_cloud);
+
+  // Update Descriptor map
+  descriptor_map_.setElevationMap(map_);
+  descriptor_map_.update(*transformed_cloud);
 
   // Map Visualization
   grid_map_msgs::GridMap msg_gridmap;
   grid_map::GridMapRosConverter::toMessage(map_, msg_gridmap);
   elevation_map_publisher.publish(msg_gridmap);
+
+  grid_map_msgs::GridMap msg_featuremap;
+  grid_map::GridMapRosConverter::toMessage(descriptor_map_, msg_featuremap);
+  descriptor_map_publisher.publish(msg_featuremap);
 }
 
 void LocalTerrainMapping::updatePose(const ros::TimerEvent& event)
@@ -44,16 +51,6 @@ void LocalTerrainMapping::updatePose(const ros::TimerEvent& event)
     return;
 
   map_.move(grid_map::Position(base_in_mapFrame.transform.translation.x, base_in_mapFrame.transform.translation.y));
-}
-
-void LocalTerrainMapping::extractFeatures(const ros::TimerEvent& event)
-{
-  map_descriptor_.update(map_);
-
-  // Descriptor Map Visualization
-  grid_map_msgs::GridMap msg;
-  grid_map::GridMapRosConverter::toMessage(map_descriptor_, msg);
-  descriptor_map_publisher.publish(msg);
 }
 
 }  // namespace ros

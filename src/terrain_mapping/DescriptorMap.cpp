@@ -10,7 +10,7 @@
 #include "terrain_mapping/DescriptorMap.h"
 
 DescriptorMap::DescriptorMap(const grid_map::GridMap& map)
-  : grid_map::GridMap(
+  : ElevationMap(
         { "elevation", "variance", "step", "slope", "roughness", "curvature", "normal_x", "normal_y", "normal_z" })
 {
   setFrameId(map.getFrameId());
@@ -19,7 +19,7 @@ DescriptorMap::DescriptorMap(const grid_map::GridMap& map)
 }
 
 DescriptorMap::DescriptorMap()
-  : grid_map::GridMap(
+  : ElevationMap(
         { "elevation", "variance", "step", "slope", "roughness", "curvature", "normal_x", "normal_y", "normal_z" })
 {
   setFrameId("map");
@@ -29,19 +29,36 @@ DescriptorMap::DescriptorMap()
 
 void DescriptorMap::setElevationMap(const grid_map::GridMap& map)
 {
-  setFrameId(map.getFrameId());
-  setGeometry(map.getLength(), map.getResolution());
+  // Copy elevation and variance layer
+  get("elevation") = map.get("elevation");
+  get("variance") = map.get("variance");
+  this->move(map.getPosition());
 }
 
-void DescriptorMap::update(const grid_map::GridMap& elevation_map)
+void DescriptorMap::update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud)
 {
-  clearAll();
-  this->move(elevation_map.getPosition());
+  // 1. Log currently measured grid index : inspect these regions only for computational efficiency
+  const std::string measurement_checking_layer("measured");
+  add(measurement_checking_layer);
+  auto& measurement_checking_layer_data = get(measurement_checking_layer);
+  std::vector<grid_map::Index> measured_index_list;
+  for (const auto& point : pointcloud)
+  {
+    // Check whether point is inside the map
+    grid_map::Index index;
+    if (!getIndex(grid_map::Position(point.x, point.y), index))
+      continue;
 
-  // Copy elevation and variance layer
-  get("elevation") = grid_map::GridMap::Matrix(elevation_map.get("elevation"));
-  get("variance") = grid_map::GridMap::Matrix(elevation_map.get("variance"));
+    // Save measuerment received area
+    if (isEmptyAt(measurement_checking_layer, index))
+    {
+      measurement_checking_layer_data(index(0), index(1)) = 1;
+      measured_index_list.push_back(index);
+    }
+  }  // pointcloud loop ends
+  // erase(measurement_checking_layer);
 
+  // 2. Compute terrain descriptor for currently measured cell
   auto& step_layer = get("step");
   auto& slope_layer = get("slope");
   auto& roughness_layer = get("roughness");
@@ -50,17 +67,12 @@ void DescriptorMap::update(const grid_map::GridMap& elevation_map)
   auto& normalY_layer = get("normal_y");
   auto& normalZ_layer = get("normal_z");
 
-  // Compute descriptor for every grid cell
-  for (grid_map::GridMapIterator iterator(*this); !iterator.isPastEnd(); ++iterator)
+  for (const auto& index : measured_index_list)
   {
-    if (!isValid(*iterator))
-      continue;
-
     TerrainDescriptor descriptor;
-    if (!estimateNormalAt(*iterator, descriptor))
+    if (!extractDescriptorAt(index, descriptor))
       continue;
 
-    const auto& index = *iterator;
     step_layer(index(0), index(1)) = descriptor.computeStep();
     slope_layer(index(0), index(1)) = descriptor.computeSlope();
     roughness_layer(index(0), index(1)) = descriptor.computeRoughness();
@@ -71,7 +83,7 @@ void DescriptorMap::update(const grid_map::GridMap& elevation_map)
   }
 }
 
-bool DescriptorMap::estimateNormalAt(const grid_map::Index& queried_index, TerrainDescriptor& descriptor)
+bool DescriptorMap::extractDescriptorAt(const grid_map::Index& queried_index, TerrainDescriptor& descriptor)
 {
   std::vector<grid_map::Position3> points_in_local;
 
