@@ -1,38 +1,59 @@
-## Frame Ids
+## -- Coordinate Frame Ids
 frameId_map: "map"
 frameId_robot: "base_link"
 
+###########################
+## Local Terrain Mapping ##
+###########################
+
 local_terrain_mapping:
+  ## -- Topics
   SubscribedTopic:
     pointcloud: "/velodyne_tilted/velodyne_points"
   PublishingTopic:
     elevation_map: "map"
     descriptor_map: "descriptor"
 
+  ## -- Terrain Map
   ElevationMap:
     grid_resolution: 0.1
     map_length_x: 12.0
     map_length_y: 12.0
 
+  ## -- Local Map Pose (Use TF Tree)
   PoseUpdate:
-    duration: 0.05 ## 20Hz
+    duration: 0.05 # 20Hz
 
-  FeatureExtraction:
-    duration: 0.1  ## 10Hz
+############################
+## Global Terrain Mapping ##
+############################
+
+global_terrain_mapping:
+  ## -- Topics
+  SubscribedTopic:
+    pointcloud: "/velodyne_tilted/velodyne_points"
+  PublishingTopic:
+    elevation_map: "map"
+    descriptor_map: "descriptor"
+
+  ## -- Terrain Map
+  ElevationMap:
+    grid_resolution: 0.1
+    map_length_x: 600.0
+    map_length_y: 600.0
+
+  ## -- Global Map Visualization
+  Visualization:
+    duration: 2.0 # [sec]
+
+############################
+## Traversability Mapping ##
+############################
 
 traversability_mapping:
+  ## -- Topics
   PublishingTopic:
     traversability_map: "map"
-
-  ## Grid map options
-  localMapMeterWidth: 10.0
-  localMapMeterHeight: 10.0
-  globalMapMeterWidth: 500.0
-  globalMapMeterHeight: 500.0
-
-  ## Feature Extraction
-  localGridSearchLength: 1
-  minNeighborRequired: 7
 
   stepThreshold: 0.3 # meter
   slopeThreshold: 21 # degree
@@ -53,20 +74,3 @@ traversability_mapping:
 
   saveWealyLabeledDataService: "save_weakly_labeled_data"
   csvFileName: samples/campus_test
-
-  ## Weak Labeling
-
-  ## Visualization
-grid_map_visualization:
-  grid_map_topic: "/terrain_mapping/map_global"
-  grid_map_visualizations:
-    - name: elevation_cloud ## topic name
-      type: point_cloud
-      params:
-        layer: elevation ## elevation (point z)
-
-    - name: map_region
-      type: map_region
-      params:
-        color: 16777215
-        line_width: 0.1

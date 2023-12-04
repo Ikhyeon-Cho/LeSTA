@@ -8,7 +8,6 @@
  */
 
 #include "terrain_mapping/ElevationMap.h"
-#include "execution_timer/ExecutionTimer.h"
 
 ElevationMap::ElevationMap(double length_x, double length_y, double grid_resolution)
   : GridMap({ "elevation", "variance", "n_point", "sample_mean", "sample_variance", "n_sample" })

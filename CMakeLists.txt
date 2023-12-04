@@ -34,10 +34,20 @@ include_directories(
 add_executable(local_terrain_mapping_node src/local_terrain_mapping_node.cpp
   src/terrain_mapping/LocalTerrainMapping.cpp
   src/terrain_mapping/ElevationMap.cpp
-  src/terrain_mapping/DescriptorMap.cpp
-  
+  src/terrain_mapping/DescriptorMap.cpp 
 )
 target_link_libraries(local_terrain_mapping_node
+  ${PCL_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(global_terrain_mapping_node src/global_terrain_mapping_node.cpp
+  src/terrain_mapping/GlobalTerrainMapping.cpp
+  src/terrain_mapping/ElevationMap.cpp
+  src/terrain_mapping/DescriptorMap.cpp
+  src/terrain_mapping/ElevationMapRosConverter.cpp
+)
+target_link_libraries(global_terrain_mapping_node
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
 )
