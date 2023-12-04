@@ -41,6 +41,10 @@ global_terrain_mapping:
     grid_resolution: 0.1
     map_length_x: 600.0
     map_length_y: 600.0
+    min_height_threshold: -0.7 # filtering pointclouds for map update
+    max_height_threshold: 0.7
+    min_range_threshold: 0.5 # range in 2D
+    max_range_threshold: 10.0
 
   ## -- Global Map Visualization
   Visualization:
@@ -65,12 +69,3 @@ traversability_mapping:
   globalMapUpdateTimeInterval: 0.1
   featureMapUpdateTimeInterval: 0.1
   loopRate: 10
-
-  ## Service
-  dataFolder: $(find traversability_mapping)/data/
-  saveMapService: "save_map"
-  cropMapService: "crop_map"
-  bagFileName: map/campus_test_image
-
-  saveWealyLabeledDataService: "save_weakly_labeled_data"
-  csvFileName: samples/campus_test

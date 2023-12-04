@@ -72,6 +72,10 @@ public:
   roscpp::Parameter<double> map_length_x{ "global_terrain_mapping/ElevationMap/map_length_x", 12 };
   roscpp::Parameter<double> map_length_y{ "global_terrain_mapping/ElevationMap/map_length_y", 12 };
   roscpp::Parameter<double> grid_resolution{ "global_terrain_mapping/ElevationMap/grid_resolution", 0.1 };
+  roscpp::Parameter<double> min_height_thres{"global_terrain_mapping/ElevationMap/min_height_threshold", -0.7};
+  roscpp::Parameter<double> max_height_thres{"global_terrain_mapping/ElevationMap/max_height_threshold", 0.7};
+  roscpp::Parameter<double> min_range_thres{"global_terrain_mapping/ElevationMap/min_range_threshold", 0.5};
+  roscpp::Parameter<double> max_range_thres{"global_terrain_mapping/ElevationMap/max_range_threshold", 10.0};
 
   // Map Viauzliation
   roscpp::Parameter<double> map_visualization_duration{ "global_terrain_mapping/Visualization/duration", 0.1 };
