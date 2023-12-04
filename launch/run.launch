@@ -1,7 +1,7 @@
 <launch>
 
   <!-- terrain_mapping -->
-  <include file="$(find traversability_mapping)/launch/terrain_mapping.launch"></include>
+  <include file="$(find traversability_mapping)/launch/local_terrain_mapping.launch"></include>
 
   <!-- traversability_mapping -->
   <include file="$(find traversability_mapping)/launch/traversability_mapping.launch"></include>
