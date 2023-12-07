@@ -4,9 +4,17 @@ add_compile_options(-std=c++14)
 
 find_package(PCL REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
-  isr_ros_utils
-  grid_map_core
-  grid_map_ros
+    roscpp
+    ros_node_utils
+    tf2_ros
+    ros_transform_utils
+    pcl_conversions
+    ros_pcl_utils
+    grid_map_core
+    grid_map_ros
+    grid_map_msgs
+    nav_msgs
+    visualization_msgs
 )
 
 catkin_package(
@@ -15,9 +23,17 @@ catkin_package(
   LIBRARIES 
     # traversability_mapping
   CATKIN_DEPENDS 
-    isr_ros_utils
+    roscpp
+    ros_node_utils
+    tf2_ros
+    ros_transform_utils
+    pcl_conversions
+    ros_pcl_utils
     grid_map_core
     grid_map_ros
+    grid_map_msgs
+    nav_msgs
+    visualization_msgs
 )
 
 ###########

@@ -11,7 +11,7 @@
 #define ROS_TRAVERSABILITY_MAPPING_H
 
 #include <ros/ros.h>
-#include <isr_ros_utils/core/core.h>
+#include <ros_node_utils/Core.h>
 
 #include <grid_map_core/grid_map_core.hpp>
 #include <grid_map_ros/GridMapRosConverter.hpp>
