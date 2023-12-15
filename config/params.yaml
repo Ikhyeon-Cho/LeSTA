@@ -7,22 +7,26 @@ frameId_robot: "base_link"
 ###########################
 
 local_terrain_mapping:
-  ## -- Topics
-  SubscribedTopic:
+  Subscribed_Topics:
     pointcloud: "/velodyne_tilted/velodyne_points"
-  PublishingTopic:
+
+  Published_Topics:
     elevation_map: "map"
     descriptor_map: "descriptor"
 
-  ## -- Terrain Map
-  ElevationMap:
+  Parameters:
+    ## Frame Ids
+    base_frame_id: "base_link"
+    map_frame_id: "map"
+
+    ## Terrain Map
     grid_resolution: 0.1
     map_length_x: 12.0
     map_length_y: 12.0
 
-  ## -- Local Map Pose (Use TF Tree)
-  PoseUpdate:
-    duration: 0.05 # 20Hz
+    ## Local Map Origin (Use TF Tree)
+    pose_update_duration: 0.1 # 10Hz
+    map_visualization_duration: 0.1 # 10Hz
 
 ############################
 ## Global Terrain Mapping ##

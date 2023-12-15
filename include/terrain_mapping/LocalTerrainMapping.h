@@ -35,31 +35,29 @@ public:
 
   void updatePose(const ros::TimerEvent& event);
 
+  void visualize(const ros::TimerEvent& event);
+
 public:
-  // ROS Parameters: Node
-  roscpp::Parameter<std::string> pointcloud_topic{ "local_terrain_mapping/SubscribedTopic/pointcloud",
-                                                   "/velodyne_points" };
-  roscpp::Parameter<std::string> elevation_map_topic{ "local_terrain_mapping/PublishingTopic/elevation_map", "map" };
-  roscpp::Parameter<std::string> descriptor_map_topic{ "local_terrain_mapping/PublishingTopic/descriptor_map",
-                                                       "descriptor" };
+  // Subscribed Topics
+  roscpp::Parameter<std::string> pointcloud_topic{ "~/Subscribed_Topics/pointcloud", "/points_raw" };
 
-  // ROS Parameters : Framd Ids
-  roscpp::Parameter<std::string> frameId_robot{ "frameId_robot", "base_link" };
-  roscpp::Parameter<std::string> frameId_map{ "frameId_map", "map" };
+  // Published Topics
+  roscpp::Parameter<std::string> elevation_map_topic{ "~/Published_Topics/elevation_map", "map" };
+  roscpp::Parameter<std::string> descriptor_map_topic{ "~/Published_Topics/descriptor_map", "descriptor" };
+  roscpp::Parameter<std::string> pointcloud_map_topic{ "~/Published_Topics/pointcloud_map", "map_cloud" };
 
-  // Elevation Map
-  roscpp::Subscriber<sensor_msgs::PointCloud2> pointcloud_subscriber{ pointcloud_topic.param(),
-                                                                      &LocalTerrainMapping::updateMap, this };
-  roscpp::Publisher<grid_map_msgs::GridMap> elevation_map_publisher{ elevation_map_topic.param() };
-  roscpp::Publisher<grid_map_msgs::GridMap> descriptor_map_publisher{ descriptor_map_topic.param() };
-
-  roscpp::Parameter<double> grid_resolution{ "local_terrain_mapping/ElevationMap/grid_resolution", 0.1 };
-  roscpp::Parameter<double> map_length_x{ "local_terrain_mapping/ElevationMap/map_length_x", 12 };
-  roscpp::Parameter<double> map_length_y{ "local_terrain_mapping/ElevationMap/map_length_y", 12 };
-
-  // Pose update
-  roscpp::Parameter<double> pose_update_duration{ "local_terrain_mapping/PoseUpdate/duration", 0.05 };  // expect 20Hz
-  roscpp::Timer pose_update_timer{ pose_update_duration.param(), &LocalTerrainMapping::updatePose, this };
+  // Parameters
+  // -- Frame Ids
+  roscpp::Parameter<std::string> base_FrameId{ "~/Parameters/base_frame_id", "base_link" };
+  roscpp::Parameter<std::string> map_FrameId{ "~/Parameters/map_frame_id", "map" };
+  // -- Elevation Map
+  roscpp::Parameter<double> grid_resolution{ "~/Parameters/grid_resolution", 0.1 };
+  roscpp::Parameter<double> map_length_x{ "~/Parameters/map_length_x", 12 };
+  roscpp::Parameter<double> map_length_y{ "~/Parameters/map_length_y", 12 };
+  // -- Duration
+  roscpp::Parameter<double> pose_update_duration{ "~/Parameters/pose_update_duration", 0.05 };  // expect 20Hz
+  roscpp::Parameter<double> map_visualization_duration{ "~/Parameters/map_visualization_duration",
+                                                        0.1 };  // expect 10Hz
 
 private:
   ElevationMap map_{ map_length_x.param(), map_length_y.param(), grid_resolution.param() };
@@ -67,6 +65,15 @@ private:
 
   TransformHandler transform_handler_;
   PointcloudProcessor<pcl::PointXYZI> pointcloud_processor_;
+
+  roscpp::Subscriber<sensor_msgs::PointCloud2> pointcloud_subscriber{ pointcloud_topic.param(),
+                                                                      &LocalTerrainMapping::updateMap, this };
+  roscpp::Publisher<grid_map_msgs::GridMap> elevation_map_publisher{ elevation_map_topic.param() };
+  roscpp::Publisher<grid_map_msgs::GridMap> descriptor_map_publisher{ descriptor_map_topic.param() };
+  roscpp::Publisher<sensor_msgs::PointCloud2> pointcloud_map_publisher{ pointcloud_map_topic.param() };
+
+  roscpp::Timer pose_update_timer{ pose_update_duration.param(), &LocalTerrainMapping::updatePose, this };
+  roscpp::Timer map_visualization_timer{ map_visualization_duration.param(), &LocalTerrainMapping::visualize, this };
 };
 
 }  // namespace ros
