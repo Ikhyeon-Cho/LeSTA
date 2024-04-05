@@ -1,5 +1,5 @@
 /*
- * global_terrain_mapping_node.cpp
+ * label_generation_node.cpp
  *
  *  Created on: Aug 17, 2023
  *      Author: Ikhyeon Cho
@@ -8,14 +8,13 @@
  */
 
 #include <ros/ros.h>
-#include "terrain_mapping/GlobalTerrainMapping.h"
+#include "label_generation/LabelGeneration.h"
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "global_terrain_mapping_node");
-  ros::NodeHandle nh("~");
+  ros::init(argc, argv, "label_generation");
 
-  ros::GlobalTerrainMapping node;
+  LabelGeneration label_generation_node;
 
   ros::spin();
 

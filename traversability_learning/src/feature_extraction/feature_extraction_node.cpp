@@ -1,5 +1,5 @@
 /*
- * local_terrain_mapping_node.cpp
+ * feature_extraction_node.cpp
  *
  *  Created on: Aug 17, 2023
  *      Author: Ikhyeon Cho
@@ -8,14 +8,13 @@
  */
 
 #include <ros/ros.h>
-#include "terrain_mapping/LocalTerrainMapping.h"
+#include "feature_extraction/FeatureExtraction.h"
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "local_terrain_mapping_node");
-  ros::NodeHandle nh("~");
+  ros::init(argc, argv, "feature_extraction");
 
-  ros::LocalTerrainMapping node;
+  FeatureExtraction feature_extraction_node;
 
   ros::spin();
 

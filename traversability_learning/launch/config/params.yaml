@@ -1,0 +1,23 @@
+feature_extraction:
+  # Topics:
+  featureMapTopic:  &gridmap "/feature_extraction/feature_grid"
+  localPatchRadius: 0.20 # [meter]
+  
+feature_extraction_visualization:
+  grid_map_topic: *gridmap
+  grid_map_visualizations:
+    # Point cloud
+    - name: /feature_extraction/feature_cloud
+      type: point_cloud
+      params:
+        layer: elevation
+    # Surface normals    
+    - name: /feature_extraction/surface_normals
+      type: vectors
+      params:
+        layer_prefix: normal_
+        position_layer: elevation
+        scale: 0.3
+        line_width: 0.01
+        color: 15600153 # red
+
