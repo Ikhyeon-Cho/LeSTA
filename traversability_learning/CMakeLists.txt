@@ -44,3 +44,13 @@ target_link_libraries(feature_extraction_node
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
 )
+
+add_executable(label_generation_node
+  src/label_generation/label_generation_node.cpp
+  src/label_generation/LabelGeneration.cpp
+  src/label_generation/Labeler.cpp
+)
+target_link_libraries(label_generation_node
+  ${PCL_LIBRARIES}
+  ${catkin_LIBRARIES}
+)

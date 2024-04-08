@@ -23,7 +23,7 @@
 class FeatureExtraction
 {
 public:
-  FeatureExtraction();
+  FeatureExtraction() = default;
 
   void elevationCloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
@@ -33,7 +33,7 @@ private:
   ros::NodeHandle nh_{ "height_mapping" };
   ros::NodeHandle pnh_{ "~" };
 
-  utils::TransformHandler tf_tree_;
+  utils::TransformHandler tf_tree_;  // For pose update
 
   // Topics
   std::string elevation_cloud_topic_{ nh_.param<std::string>("heightMapCloudTopic", "/elevation_cloud") };
@@ -48,11 +48,11 @@ private:
   double map_length_x_{ nh_.param<double>("mapLengthX", 10.0) };
   double map_length_y_{ nh_.param<double>("mapLengthY", 10.0) };
 
-  // Feature Extraction Parameters
-  double local_patch_radius_{ pnh_.param<double>("localPatchRadius", 0.2) };
-
   // Duration
   double pose_update_rate_{ nh_.param<double>("poseUpdateRate", 20) };
+
+  // Feature Extraction Parameters
+  double local_patch_radius_{ pnh_.param<double>("localPatchRadius", 0.2) };
 
   // ROS
   ros::Subscriber sub_elevation_cloud_{ nh_.subscribe(elevation_cloud_topic_, 10,

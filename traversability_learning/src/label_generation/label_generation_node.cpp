@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "label_generation");
 
-  LabelGeneration label_generation_node;
+  TraversabilityLabelGeneration label_generation_node;
 
   ros::spin();
 

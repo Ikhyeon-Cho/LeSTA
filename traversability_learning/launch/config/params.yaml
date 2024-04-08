@@ -1,18 +1,40 @@
+height_mapping: # this overrides the height_mapping package's yaml
+  # Height map Parameters:
+  gridResolution: 0.1
+  mapLengthX: 30.0
+  mapLengthY: 30.0
+  # Topics:
+  heightMapCloudTopic: "/height_mapping/elevation_cloud" # Feature extraction subscribes to this topic
+
 feature_extraction:
   # Topics:
-  featureMapTopic:  &gridmap "/feature_extraction/feature_grid"
-  localPatchRadius: 0.20 # [meter]
-  
+  featureMapTopic: &grid_map_topic "/feature_extraction/feature_grid"
+  featureMapCloudTopic: &pointcloud_map_topic "/feature_extraction/feature_cloud" # Label generator subscribes to this topic
+  surfaceNormalTopic: &surface_normal_topic "/feature_extraction/surface_normals"
+
+label_generation:
+  # Topics:
+  labelMapTopic: &label_map_topic "/traversability_learning/label_grid"
+
+  # Labeling Parameters:
+  footprintRadius: 0.5 # meters -> positive label generation
+  maxAcceptableTerrainStep: 0.1 # meters -> negative label generation
+  maxAcceptableTerrainSlope: 20 # degrees -> negative label generation
+
+  ## Duration
+  footprintRecordingRate: 10 # Hz
+  visualizationRate: 10 # Hz
+
 feature_extraction_visualization:
-  grid_map_topic: *gridmap
+  grid_map_topic: *grid_map_topic
   grid_map_visualizations:
     # Point cloud
-    - name: /feature_extraction/feature_cloud
+    - name: *pointcloud_map_topic
       type: point_cloud
       params:
         layer: elevation
-    # Surface normals    
-    - name: /feature_extraction/surface_normals
+    # Surface normals
+    - name: *surface_normal_topic
       type: vectors
       params:
         layer_prefix: normal_

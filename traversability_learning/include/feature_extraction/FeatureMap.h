@@ -26,14 +26,9 @@ public:
   FeatureMap(double map_length_x, double map_length_y, double resolution);
   bool initializeFrom(const HeightMap& map);
 
-  void setLocalPatchRadius(double radius);
-
-  void update();
+  void update(double local_patch_radius);
 
   // void update(std::vector<grid_map::Index> cell_indices);
-
-private:
-  double local_radius_{ 0.15 };  // Default: 15cm radius circle as local area
 };
 }  // namespace grid_map
 
@@ -41,6 +36,7 @@ class TerrainDescriptor
 {
 public:
   TerrainDescriptor() = default;
+  void setLocalPatchRadius(double radius);
 
   bool principleComponentAnalysisAt(const grid_map::HeightMap& map, const grid_map::Index& index);
 
@@ -52,9 +48,11 @@ public:
 
 private:
   // helper functions
-  bool doCovarianceAnalysis();
+  bool doEigenDeconposition();
   const double& getSmallestEigenValue() const;
 
+  // local patch size
+  double local_radius_{ 0.15 };  // Default: 15cm radius circle as local area
   // points in local
   std::vector<Eigen::Vector3d> descriptor_points_;
 

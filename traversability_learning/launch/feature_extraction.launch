@@ -1,21 +1,26 @@
 <launch>
   <arg name="input_cloud" default="/velodyne_tilted/velodyne_points" />
 
-  <!-- Assign Parameters to Server -->
-  <rosparam file="$(find traversability_learning)/launch/config/params.yaml" command="load"
-    subst_value="true" />
-
   <!-- Height mapping -->
   <include file="$(find height_mapping)/launch/height_mapping.launch">
     <arg name="input_cloud" value="$(arg input_cloud)" />
   </include>
 
+  <!-- Assign Parameters to Server -->
+  <rosparam file="$(find traversability_learning)/launch/config/params.yaml" command="load"
+    subst_value="true" />
+
   <!-- Terrain Feature Extraction -->
   <node pkg="traversability_learning" type="feature_extraction_node" name="feature_extraction"
-    output="screen" />
+    output="screen">
+    <param name="localPatchRadius" value="0.20" />
+  </node>
 
   <!-- Feature Map Visualization -->
   <node pkg="grid_map_visualization" type="grid_map_visualization"
     name="feature_extraction_visualization" output="screen" />
+
+  <node pkg="traversability_learning" type="label_generation_node"
+    name="label_generation" output="screen" />
 
 </launch>

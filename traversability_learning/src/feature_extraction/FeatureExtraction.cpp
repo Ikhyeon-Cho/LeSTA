@@ -9,21 +9,16 @@
 
 #include "feature_extraction/FeatureExtraction.h"
 
-FeatureExtraction::FeatureExtraction()
-{
-  feature_map_.setLocalPatchRadius(local_patch_radius_);
-}
-
 void FeatureExtraction::elevationCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  HeightMapConverter::fromPointCloud(*msg, map_);
+  HeightMapConverter::fromPointCloud2(*msg, map_);
   if (!feature_map_.initializeFrom(map_))
   {
-    ROS_ERROR("Feature map initialization failed.");
+    ROS_WARN("Invalid elevation cloud. Skip this cloud.");
     return;
   }
 
-  feature_map_.update();
+  feature_map_.update(local_patch_radius_);
 
   // Publish the map
   grid_map_msgs::GridMap message;

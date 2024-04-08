@@ -14,34 +14,52 @@ namespace grid_map
 FeatureMap::FeatureMap(const HeightMap& map) : HeightMap(map.getLength().x(), map.getLength().y(), map.getResolution())
 {
   setFrameId(map.getFrameId());
-  addLayer("step");
-  addLayer("slope");
-  addLayer("roughness");
-  addLayer("curvature");
-  addLayer("normal_x");
-  addLayer("normal_y");
-  addLayer("normal_z");
+
+  // Basic layers for feature map
+  std::vector<std::string> basic_layers = { "step", "slope", "roughness", "curvature", "variance" };
+  for (const auto& layer : basic_layers)
+  {
+    addLayer(layer, 0.0f);
+    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
+  }
+  setBasicLayers(basic_layers);
+
+  // Normal layers for normal estimation visualization
+  auto normal_layers = { "normal_x", "normal_y", "normal_z" };
+  for (const auto& layer : normal_layers)
+  {
+    addLayer(layer);
+    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
+  }
 }
 
 FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resolution)
   : HeightMap(map_length_x, map_length_y, resolution)
 {
+  setFrameId("map");
   setGeometry(grid_map::Length(map_length_x, map_length_y), resolution);
 
-  setFrameId("map");
-  setBasicLayers({ "elevation" });
+  // Basic layers for feature map
+  std::vector<std::string> basic_layers = { "step", "slope", "roughness", "curvature", "variance" };
+  for (const auto& layer : basic_layers)
+  {
+    addLayer(layer, 0.0f);
+    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
+  }
+  setBasicLayers(basic_layers);
 
-  addLayer("step", 0.0f);
-  addLayer("slope", 0.0f);
-  addLayer("roughness", 0.0f);
-  addLayer("curvature", 0.0f);
-  addLayer("normal_x");
-  addLayer("normal_y");
-  addLayer("normal_z");
+  // Normal layers for normal estimation visualization
+  auto normal_layers = { "normal_x", "normal_y", "normal_z" };
+  for (const auto& layer : normal_layers)
+  {
+    addLayer(layer);
+    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
+  }
 }
 
 bool FeatureMap::initializeFrom(const HeightMap& map)
 {
+  this->setFrameId(map.getFrameId());
   if (!map.hasHeightValue())
   {
     std::cout << "\033[1;32m[FeatureMap] Input height map does not have height values.\033[0m" << std::endl;
@@ -55,12 +73,7 @@ bool FeatureMap::initializeFrom(const HeightMap& map)
   return true;
 }
 
-void FeatureMap::setLocalPatchRadius(double radius)
-{
-  local_radius_ = radius;
-}
-
-void FeatureMap::update()
+void FeatureMap::update(double local_patch_radius)
 {
   const auto& height_matrix = getHeightMatrix();
   TerrainDescriptor descriptor;
@@ -84,55 +97,12 @@ void FeatureMap::update()
     this->get("normal_z")(i) = descriptor.getNormalVector().z();
   }
 }
-
-// void FeatureMap::update(const pcl::PointCloud<pcl::PointXYZI>& pointcloud)
-// {
-//   // 1. Log currently measured grid index : inspect these regions only for computational efficiency
-//   const std::string measurement_checking_layer("measured");
-//   add(measurement_checking_layer);
-//   auto& measurement_checking_layer_data = get(measurement_checking_layer);
-//   std::vector<grid_map::Index> measured_index_list;
-//   for (const auto& point : pointcloud)
-//   {
-//     // Check whether point is inside the map
-//     grid_map::Index index;
-//     if (!getIndex(grid_map::Position(point.x, point.y), index))
-//       continue;
-
-//     // Save measuerment received area
-//     if (isEmptyAt(measurement_checking_layer, index))
-//     {
-//       measurement_checking_layer_data(index(0), index(1)) = 1;
-//       measured_index_list.push_back(index);
-//     }
-//   }  // pointcloud loop ends
-//   // erase(measurement_checking_layer);
-
-//   // 2. Compute terrain descriptor for currently measured cell
-//   auto& step_layer = get("step");
-//   auto& slope_layer = get("slope");
-//   auto& roughness_layer = get("roughness");
-//   auto& curvature_layer = get("curvature");
-//   auto& normalX_layer = get("normal_x");
-//   auto& normalY_layer = get("normal_y");
-//   auto& normalZ_layer = get("normal_z");
-
-//   for (const auto& index : measured_index_list)
-//   {
-//     TerrainDescriptor descriptor;
-//     if (!extractDescriptorAt(index, descriptor))
-//       continue;
-
-//     step_layer(index(0), index(1)) = descriptor.getStep();
-//     slope_layer(index(0), index(1)) = descriptor.getSlope();
-//     roughness_layer(index(0), index(1)) = descriptor.getRoughness();
-//     curvature_layer(index(0), index(1)) = descriptor.getCurvature();
-//     normalX_layer(index(0), index(1)) = descriptor.getNormalVector().x();
-//     normalY_layer(index(0), index(1)) = descriptor.getNormalVector().y();
-//     normalZ_layer(index(0), index(1)) = descriptor.getNormalVector().z();
-//   }
-// }
 }  // namespace grid_map
+
+void TerrainDescriptor::setLocalPatchRadius(double radius)
+{
+  local_radius_ = radius;
+}
 
 bool TerrainDescriptor::principleComponentAnalysisAt(const grid_map::HeightMap& map, const grid_map::Index& index)
 {
@@ -150,17 +120,17 @@ bool TerrainDescriptor::principleComponentAnalysisAt(const grid_map::HeightMap& 
     descriptor_points_.push_back(point);
   }  // circle iterator ends
 
-  if (descriptor_points_.size() < 3)
+  if (descriptor_points_.size() < 4)
   {
     // debug
     // std::cout << "Not enough points to establish normal direction (nPoints = " << nPoints << ")" << std::endl;
     return false;
   }
 
-  return doCovarianceAnalysis();
+  return doEigenDeconposition();
 }
 
-bool TerrainDescriptor::doCovarianceAnalysis()
+bool TerrainDescriptor::doEigenDeconposition()
 {
   Eigen::Vector3d sum_points(Eigen::Vector3d::Zero());
   Eigen::Matrix3d squared_sum_points(Eigen::Matrix3d::Zero());
