@@ -53,3 +53,13 @@ target_link_libraries(label_generation_node
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
 )
+
+add_executable(traversability_prediction_node
+  src/traversability_prediction/traversability_prediction_node.cpp
+  src/traversability_prediction/TraversabilityPrediction.cpp
+  src/traversability_prediction/TraversabilityMap.cpp
+)
+target_link_libraries(traversability_prediction_node
+  ${PCL_LIBRARIES}
+  ${catkin_LIBRARIES}
+)

@@ -18,4 +18,7 @@
   <node pkg="grid_map_visualization" type="grid_map_visualization" name="feature_extraction_visualization"
     output="screen" />
 
+  <!-- Traversability Label Generation -->
+  <node pkg="traversability_learning" type="label_generation_node" name="label_generation" output="screen" />
+
 </launch>

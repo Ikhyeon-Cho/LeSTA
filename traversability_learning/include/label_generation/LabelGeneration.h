@@ -17,15 +17,11 @@
 #include <height_map_msgs/HeightMapConverter.h>
 #include <height_map_msgs/HeightMapMsgs.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include "label_generation/Traversability.h"
 
 class TraversabilityLabelGeneration
 {
 public:
-  // constant label: 0 - unknown, 1 - traversable, 2 - non-traversable
-  static constexpr int TRAVERSABLE = 1;
-  static constexpr int NON_TRAVERSABLE = 0;
-  static constexpr int UNKNOWN = 2;
-
   TraversabilityLabelGeneration();
 
   bool updateMeasuredIndices(const grid_map::HeightMap& map, const pcl::PointCloud<pcl::PointXYZ>& cloud);
@@ -45,7 +41,7 @@ private:
 
   // Topics
   std::string feature_cloud_topic_{ nh2_.param<std::string>("featureMapCloudTopic", "/feature_cloud") };
-  std::string label_cloud_topic_{ pnh_.param<std::string>("labelMapTopic", "/label_grid") };
+  std::string label_cloud_topic_{ pnh_.param<std::string>("labelMapTopic", "/label_cloud") };
 
   // Frame Ids
   std::string baselink_frame{ nh_.param<std::string>("baseLinkFrame", "base_link") };
@@ -62,7 +58,7 @@ private:
 
   // Labeling Parameters
   double footprint_radius_{ pnh_.param<double>("footprintRadius", 0.5) };               // meters
-  double max_acceptable_step_{ pnh_.param<double>("maxAcceptableTerrainStep", 0.1) };    // meters
+  double max_acceptable_step_{ pnh_.param<double>("maxAcceptableTerrainStep", 0.1) };   // meters
   double max_acceptable_slope_{ pnh_.param<double>("maxAcceptableTerrainSlope", 20) };  // degrees
 
   // ROS
@@ -79,6 +75,8 @@ private:
   void recordFootprintAt(const grid_map::Position& robot_position);
 
   void recordOverThresholdAreas();
+
+  void recordUnknownAreas();
 
   // Since the map size is fixed, it is more efficient to assign memory before start
   grid_map::HeightMap labeled_map_{ map_length_x_, map_length_y_, grid_resolution_ };

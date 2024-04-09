@@ -48,11 +48,12 @@ public:
 
 private:
   // helper functions
-  bool doEigenDeconposition();
+  bool doEigenDecomposition();
   const double& getSmallestEigenValue() const;
 
   // local patch size
   double local_radius_{ 0.15 };  // Default: 15cm radius circle as local area
+
   // points in local
   std::vector<Eigen::Vector3d> descriptor_points_;
 

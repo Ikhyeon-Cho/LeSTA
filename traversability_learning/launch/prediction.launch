@@ -15,7 +15,14 @@
   </node>
 
   <!-- Feature Map Visualization -->
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="feature_extraction_visualization"
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="feature_map_visualization"
+    output="screen" />
+
+  <!-- Traversability Prediction -->
+  <node pkg="traversability_learning" type="traversability_prediction_node" name="traversability_prediction" output="screen" />
+
+  <!-- Traversability Map Visualization -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_map_visualization"
     output="screen" />
 
 </launch>

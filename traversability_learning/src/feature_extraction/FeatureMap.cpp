@@ -110,10 +110,10 @@ bool TerrainDescriptor::principleComponentAnalysisAt(const grid_map::HeightMap& 
     return false;
   }
 
-  return doEigenDeconposition();
+  return doEigenDecomposition();
 }
 
-bool TerrainDescriptor::doEigenDeconposition()
+bool TerrainDescriptor::doEigenDecomposition()
 {
   Eigen::Vector3d sum_points(Eigen::Vector3d::Zero());
   Eigen::Matrix3d squared_sum_points(Eigen::Matrix3d::Zero());

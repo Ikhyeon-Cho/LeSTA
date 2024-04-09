@@ -73,6 +73,9 @@ void TraversabilityLabelGeneration::generateLabels(const ros::TimerEvent& event)
 
   // Record the over-threshold areas (negative label)
   recordOverThresholdAreas();
+
+  // Record the unknown areas
+  recordUnknownAreas();
 }
 
 void TraversabilityLabelGeneration::recordFootprintAt(const grid_map::Position& footprint_position)
@@ -84,7 +87,7 @@ void TraversabilityLabelGeneration::recordFootprintAt(const grid_map::Position& 
     if (!labeled_map_.getPosition3(labeled_map_.getHeightLayer(), *iterator, point))
       continue;
 
-    labeled_map_.at("traversability_label", *iterator) = TRAVERSABLE;
+    labeled_map_.at("traversability_label", *iterator) = (float)Traversability::TRAVERSABLE;
   }  // circle iterator ends
 }
 
@@ -92,16 +95,45 @@ void TraversabilityLabelGeneration::recordOverThresholdAreas()
 {
   for (auto index : measured_indices_)
   {
-    // Skip if the cell is already labeled, else relabel
-    if (labeled_map_.at("traversability_label", index) == TRAVERSABLE)
+    // Skip if the cell is already labeled
+    const auto& traversability_label = labeled_map_.at("traversability_label", index);
+    bool has_label = std::isfinite(traversability_label);
+    if (has_label)
       continue;
 
-    // Negative labeling
-    if (labeled_map_.at("slope", index) > max_acceptable_slope_ &&
-        labeled_map_.at("step", index) > max_acceptable_step_)
-      labeled_map_.at("traversability_label", index) = NON_TRAVERSABLE;
+    // bool is_non_traversable = (labeled_map_.at("slope", index) > max_acceptable_slope_ &&
+    //                            labeled_map_.at("step", index) > max_acceptable_step_);
+    bool is_non_traversable = labeled_map_.at("step", index) > max_acceptable_step_;
+    if (is_non_traversable)
+    {
+      labeled_map_.at("traversability_label", index) = (float)Traversability::NON_TRAVERSABLE;
+    }
+  }
+}
+
+void TraversabilityLabelGeneration::recordUnknownAreas()
+{
+  for (auto index : measured_indices_)
+  {
+    // Skip if the cell is already labeled
+    const auto& traversability_label = labeled_map_.at("traversability_label", index);
+    bool has_label = std::isfinite(traversability_label);
+    bool is_traversable = std::abs(traversability_label - (float)Traversability::TRAVERSABLE) < 1e-6;
+    // bool is_non_traversable = (labeled_map_.at("slope", index) > max_acceptable_slope_ &&
+    //                            labeled_map_.at("step", index) > max_acceptable_step_);
+    bool is_non_traversable = labeled_map_.at("step", index) > max_acceptable_step_;
+
+    if (has_label)
+    {
+      if (is_traversable)
+        continue;
+      if (is_non_traversable)
+        continue;
+      else
+        labeled_map_.at("traversability_label", index) = (float)Traversability::UNKNOWN;
+    }
     else
-      labeled_map_.at("traversability_label", index) = UNKNOWN;
+      labeled_map_.at("traversability_label", index) = (float)Traversability::UNKNOWN;
   }
 }
 
@@ -110,7 +142,8 @@ void TraversabilityLabelGeneration::publishLabeledMap(const ros::TimerEvent& eve
   // Publish the labeled cloud
   sensor_msgs::PointCloud2 labeled_cloud_msg;
   auto layer_to_visualize =
-      std::vector<std::string>{ "elevation", "step", "slope", "roughness", "curvature", "variance", "traversability_label" };
+      std::vector<std::string>{ "elevation",           "step", "slope", "roughness", "curvature", "variance",
+                                "traversability_label" };
   HeightMapConverter::toPointCloud2(labeled_map_, layer_to_visualize, measured_indices_, labeled_cloud_msg);
   pub_label_cloud_.publish(labeled_cloud_msg);
 }

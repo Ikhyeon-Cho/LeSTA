@@ -11,12 +11,12 @@
 
 void FeatureExtraction::elevationCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  HeightMapConverter::fromPointCloud2(*msg, map_);
-  if (!feature_map_.initializeFrom(map_))
-  {
-    ROS_WARN("Invalid elevation cloud. Skip this cloud.");
-    return;
-  }
+  HeightMapConverter::fromPointCloud2(*msg, feature_map_);
+  // if (!feature_map_.initializeFrom(map_))
+  // {
+    // ROS_WARN("Invalid elevation cloud. Skip this cloud.");
+    // return;
+  // }
 
   feature_map_.update(local_patch_radius_);
 

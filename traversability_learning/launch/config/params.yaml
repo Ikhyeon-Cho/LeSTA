@@ -3,18 +3,28 @@ height_mapping: # this overrides the height_mapping package's yaml
   gridResolution: 0.1
   mapLengthX: 30.0
   mapLengthY: 30.0
+
   # Topics:
   heightMapCloudTopic: "/height_mapping/elevation_cloud" # Feature extraction subscribes to this topic
 
 feature_extraction:
   # Topics:
-  featureMapTopic: &grid_map_topic "/feature_extraction/feature_grid"
-  featureMapCloudTopic: &pointcloud_map_topic "/feature_extraction/feature_cloud" # Label generator subscribes to this topic
-  surfaceNormalTopic: &surface_normal_topic "/feature_extraction/surface_normals"
+  featureMapTopic: &feature_map_topic "/traversability_learning/feature_grid"
+  featureMapCloudTopic: &feature_cloud_topic "/traversability_learning/feature_cloud" # Label generator subscribes to this topic
+  surfaceNormalTopic: &surface_normal_topic "/traversability_learning/surface_normals"
+
+traversability_prediction:
+  # Topics:
+  traversabilityMapTopic: &traversability_map_topic "/traversability_learning/traversability_grid"
+  traversabilityMapCloudTopic: &traversability_cloud_topic "/traversability_learning/traversability_cloud"
+
+  # Parameters:
+  traversabilityThreshold: 0.5
+  traversabilityPredictionRate: 10 # Hz
 
 label_generation:
   # Topics:
-  labelMapTopic: &label_map_topic "/traversability_learning/label_grid"
+  labelMapTopic: "/traversability_learning/label_cloud"
 
   # Labeling Parameters:
   footprintRadius: 0.5 # meters -> positive label generation
@@ -25,11 +35,11 @@ label_generation:
   footprintRecordingRate: 10 # Hz
   visualizationRate: 10 # Hz
 
-feature_extraction_visualization:
-  grid_map_topic: *grid_map_topic
+feature_map_visualization:
+  grid_map_topic: *feature_map_topic
   grid_map_visualizations:
     # Point cloud
-    - name: *pointcloud_map_topic
+    - name: *feature_cloud_topic
       type: point_cloud
       params:
         layer: elevation
@@ -43,3 +53,11 @@ feature_extraction_visualization:
         line_width: 0.01
         color: 15600153 # red
 
+traversability_map_visualization:
+  grid_map_topic: *traversability_map_topic
+  grid_map_visualizations:
+    # Point cloud
+    - name: *traversability_cloud_topic
+      type: point_cloud
+      params:
+        layer: elevation
