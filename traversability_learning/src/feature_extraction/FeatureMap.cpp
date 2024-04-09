@@ -11,26 +11,9 @@
 
 namespace grid_map
 {
-FeatureMap::FeatureMap(const HeightMap& map) : HeightMap(map.getLength().x(), map.getLength().y(), map.getResolution())
+FeatureMap::FeatureMap(const HeightMap& map) : FeatureMap(map.getLength().x(), map.getLength().y(), map.getResolution())
 {
   setFrameId(map.getFrameId());
-
-  // Basic layers for feature map
-  std::vector<std::string> basic_layers = { "step", "slope", "roughness", "curvature", "variance" };
-  for (const auto& layer : basic_layers)
-  {
-    addLayer(layer, 0.0f);
-    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
-  }
-  setBasicLayers(basic_layers);
-
-  // Normal layers for normal estimation visualization
-  auto normal_layers = { "normal_x", "normal_y", "normal_z" };
-  for (const auto& layer : normal_layers)
-  {
-    addLayer(layer);
-    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
-  }
 }
 
 FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resolution)
@@ -40,20 +23,20 @@ FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resoluti
   setGeometry(grid_map::Length(map_length_x, map_length_y), resolution);
 
   // Basic layers for feature map
-  std::vector<std::string> basic_layers = { "step", "slope", "roughness", "curvature", "variance" };
-  for (const auto& layer : basic_layers)
+  std::vector<std::string> feature_layers{ "step", "slope", "roughness", "curvature", "variance" };
+  for (const auto& feature_layer : feature_layers)
   {
-    addLayer(layer, 0.0f);
-    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
+    addLayer(feature_layer, 0.0f);
+    std::cout << "[@ FeatureMap] Added " << feature_layer << " layer to the height map" << std::endl;
   }
-  setBasicLayers(basic_layers);
+  setBasicLayers(feature_layers);
 
-  // Normal layers for normal estimation visualization
-  auto normal_layers = { "normal_x", "normal_y", "normal_z" };
-  for (const auto& layer : normal_layers)
+  // Normal layers for 3D normal vector visualization
+  std::vector<std::string> normal_layers{ "normal_x", "normal_y", "normal_z" };
+  for (const auto& normal_layer : normal_layers)
   {
-    addLayer(layer);
-    std::cout << "[@ FeatureMap] Added " << layer << " layer to the height map" << std::endl;
+    addLayer(normal_layer);
+    std::cout << "[@ FeatureMap] Added " << normal_layer << " layer to the height map" << std::endl;
   }
 }
 
