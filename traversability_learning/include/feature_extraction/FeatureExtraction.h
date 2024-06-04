@@ -36,7 +36,7 @@ private:
   std::string map_frame{ nh_priv_.param<std::string>("/frame_id/map", "map") };
 
   // Feature Extraction Parameters
-  double normal_estimation_radius_{ nh_priv_.param<double>("featureExtractionRadius", 0.2) };
+  double normal_estimation_radius_{ nh_priv_.param<double>("normalEstimationRadius", 0.2) };
 
   // ROS
   ros::Subscriber sub_heightmap_{ nh_priv_.subscribe(heightmap_topic_, 10, &FeatureExtraction::HeightMapCallback,

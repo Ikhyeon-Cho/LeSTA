@@ -1,0 +1,15 @@
+traversabilityThreshold: 0.5
+traversabilityPredictionRate: 10 # Hz
+
+label_generation:
+  # Topics:
+  labelMapTopic: "/traversability_learning/label_cloud"
+
+  # Labeling Parameters:
+  footprintRadius: 0.5 # meters -> positive label generation
+  maxAcceptableTerrainStep: 0.1 # meters -> negative label generation
+  maxAcceptableTerrainSlope: 20 # degrees -> negative label generation
+
+  ## Duration
+  footprintRecordingRate: 10 # Hz
+  visualizationRate: 10 # Hz

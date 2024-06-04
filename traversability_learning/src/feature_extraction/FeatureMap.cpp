@@ -40,7 +40,7 @@ FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resoluti
   }
 }
 
-void FeatureMap::setFeatureExtractionRadius(double radius)
+void FeatureMap::setNormalEstimationRadius(double radius)
 {
   normal_estimation_radius_ = radius;
 }

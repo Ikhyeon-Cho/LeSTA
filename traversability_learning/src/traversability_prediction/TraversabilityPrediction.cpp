@@ -9,25 +9,20 @@
 
 #include "traversability_prediction/TraversabilityPrediction.h"
 
-void TraversabilityPrediction::featureCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
+TraversabilityPrediction::TraversabilityPrediction()
 {
-  HeightMapConverter::fromPointCloud2(*msg, map_);
+  trav_map_.setFrameId(map_frame);
+}
 
-  map_.update();
+void TraversabilityPrediction::featureMapCallback(const grid_map_msgs::GridMapConstPtr& msg)
+{
+  // Convert grid map msg to grid map
+  grid_map::GridMapRosConverter::fromMessage(*msg, trav_map_);
+
+  trav_map_.update();
 
   // Publish the map
   grid_map_msgs::GridMap message;
-  grid_map::GridMapRosConverter::toMessage(map_, map_.getLayers(), message);
-  pub_map.publish(message);
-}
-
-void TraversabilityPrediction::updateMapPosition(const ros::TimerEvent& event)
-{
-  // Get Transform from base_link to map (localization pose)
-  auto [get_transform_b2m, base_to_map] = tf_tree_.getTransform(baselink_frame, map_frame);
-  if (!get_transform_b2m)
-    return;
-
-  // Update map position
-  map_.move(grid_map::Position(base_to_map.transform.translation.x, base_to_map.transform.translation.y));
+  grid_map::GridMapRosConverter::toMessage(trav_map_, trav_map_.getLayers(), message);
+  pub_traversabilitymap_.publish(message);
 }

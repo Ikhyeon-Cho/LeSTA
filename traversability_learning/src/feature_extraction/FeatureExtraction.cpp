@@ -12,12 +12,12 @@
 FeatureExtraction::FeatureExtraction()
 {
   feature_map_->setFrameId(map_frame);
-  feature_map_->setFeatureExtractionRadius(normal_estimation_radius_);
+  feature_map_->setNormalEstimationRadius(normal_estimation_radius_);
 }
 
 void FeatureExtraction::HeightMapCallback(const grid_map_msgs::GridMapConstPtr& msg)
 {
-  // Convert grid map to grid map
+  // Convert grid map msg to grid map
   grid_map::GridMapRosConverter::fromMessage(*msg, *feature_map_);
 
   feature_map_->update();

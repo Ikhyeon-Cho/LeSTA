@@ -28,7 +28,7 @@ public:
 
   bool initializeFrom(const HeightMap& map);
 
-  void setFeatureExtractionRadius(double radius);
+  void setNormalEstimationRadius(double radius);
 
   void update();
 

@@ -55,7 +55,7 @@ public:
     // [2] Comparison Method: Rule-based classifier -> use slope
     float min_slope = 0;
     float max_slope = 30;
-    // scaled slope: 1 for 0, 0 for 20
+    // scaled slope: 1 for 0, 0 for 30
     auto scaled_slope = (slope - min_slope) / (max_slope - min_slope);
     if (scaled_slope < 0)
       scaled_slope = 0;

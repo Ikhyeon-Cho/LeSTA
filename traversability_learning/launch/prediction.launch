@@ -1,28 +1,17 @@
 <launch>
-  <arg name="input_cloud" default="/velodyne_tilted/velodyne_points" />
 
-  <!-- Height mapping -->
-  <include file="$(find height_mapping)/launch/height_mapping.launch">
-    <arg name="input_cloud" value="$(arg input_cloud)" />
-  </include>
+  <!-- Terrain feature extraction -->
+  <include file="$(find traversability_learning)/launch/include/feature_extraction.launch" />
 
-  <!-- Assign Parameters to Server -->
-  <rosparam file="$(find traversability_learning)/launch/config/params.yaml" command="load" subst_value="true" />
-
-  <!-- Terrain Feature Extraction -->
-  <node pkg="traversability_learning" type="feature_extraction_node" name="feature_extraction" output="screen">
-    <param name="localPatchRadius" value="0.20" />
+  <!-- Traversability prediction -->
+  <node pkg="traversability_learning" type="traversability_prediction_node" name="traversability_prediction"
+    output="screen">
+    <rosparam file="$(find traversability_learning)/config/traversability/params.yaml" command="load" />
   </node>
 
-  <!-- Feature Map Visualization -->
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="feature_map_visualization"
-    output="screen" />
-
-  <!-- Traversability Prediction -->
-  <node pkg="traversability_learning" type="traversability_prediction_node" name="traversability_prediction" output="screen" />
-
-  <!-- Traversability Map Visualization -->
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_map_visualization"
-    output="screen" />
+  <!-- Traversability visualization -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_visualization" output="screen">
+    <rosparam file="$(find traversability_learning)/config/traversability/visualization.yaml" />
+  </node>
 
 </launch>

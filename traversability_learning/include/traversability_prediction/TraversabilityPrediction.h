@@ -12,56 +12,36 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
+
 #include <height_map_core/height_map_core.h>
 #include <height_map_msgs/HeightMapConverter.h>
 #include <height_map_msgs/HeightMapMsgs.h>
 
 #include "traversability_prediction/TraversabilityMap.h"
 
-#include "ros_utils/TransformHandler.h"
-
 class TraversabilityPrediction
 {
 public:
-  TraversabilityPrediction() = default;
+  TraversabilityPrediction();
 
-  void featureCloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
-
-  void updateMapPosition(const ros::TimerEvent& event);
+  void featureMapCallback(const grid_map_msgs::GridMapConstPtr& msg);
 
 private:
-  ros::NodeHandle nh_{ "height_mapping" };
-  ros::NodeHandle nh2_{ "feature_extraction" };
-  ros::NodeHandle pnh_{ "~" };
-
-  utils::TransformHandler tf_tree_;  // For pose update
-
-  // Topics
-  std::string feature_cloud_topic_{ nh2_.param<std::string>("featureMapCloudTopic", "/feature_cloud") };
-  std::string travmap_topic_{ pnh_.param<std::string>("traversabilityMapTopic", "/traversability_grid") };
+  ros::NodeHandle nh_priv_{ "~" };
 
   // Frame Ids
-  std::string baselink_frame{ nh_.param<std::string>("baseLinkFrame", "base_link") };
-  std::string map_frame{ nh_.param<std::string>("mapFrame", "map") };
-
-  // Height Map Parameters
-  double grid_resolution_{ nh_.param<double>("gridResolution", 0.1) };
-  double map_length_x_{ nh_.param<double>("mapLengthX", 10.0) };
-  double map_length_y_{ nh_.param<double>("mapLengthY", 10.0) };
-
-  // Duration
-  double pose_update_rate_{ nh_.param<double>("poseUpdateRate", 20) };
+  std::string baselink_frame{ nh_priv_.param<std::string>("/frame_id/base_link", "base_link") };
+  std::string map_frame{ nh_priv_.param<std::string>("/frame_id/map", "map") };
 
   // ROS
-  ros::Subscriber sub_feature_cloud_{ nh_.subscribe(feature_cloud_topic_, 10,
-                                                    &TraversabilityPrediction::featureCloudCallback, this) };
-  ros::Publisher pub_map{ pnh_.advertise<grid_map_msgs::GridMap>(travmap_topic_, 1) };
-  ros::Timer pose_update_timer_{ nh_.createTimer(pose_update_rate_, &TraversabilityPrediction::updateMapPosition,
-                                                 this) };
+  ros::Subscriber sub_featuremap_{ nh_priv_.subscribe("/traversability_estimation/features/gridmap", 10,
+                                                      &TraversabilityPrediction::featureMapCallback, this) };
+  ros::Publisher pub_traversabilitymap_{ nh_priv_.advertise<grid_map_msgs::GridMap>(
+      "/traversability_estimation/map/gridmap", 1) };
 
 private:
-  // Since the map size is fixed, it is more efficient to assign memory before start
-  grid_map::TraversabilityMap map_{ map_length_x_, map_length_y_, grid_resolution_ };
+  // arbitrary values: real size will be determined by the input map
+  grid_map::TraversabilityMap trav_map_{ 10, 10, 0.1 };
 };
 
 #endif  // TRAVERSABILITY_PREDICTION_H
