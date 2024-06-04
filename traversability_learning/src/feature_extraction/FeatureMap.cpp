@@ -40,6 +40,11 @@ FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resoluti
   }
 }
 
+void FeatureMap::setFeatureExtractionRadius(double radius)
+{
+  normal_estimation_radius_ = radius;
+}
+
 bool FeatureMap::initializeFrom(const HeightMap& map)
 {
   this->setFrameId(map.getFrameId());
@@ -56,10 +61,10 @@ bool FeatureMap::initializeFrom(const HeightMap& map)
   return true;
 }
 
-void FeatureMap::update(double local_patch_radius)
+void FeatureMap::update()
 {
   const auto& height_matrix = getHeightMatrix();
-  TerrainDescriptor descriptor;
+  TerrainDescriptor descriptor(normal_estimation_radius_);
   for (grid_map::GridMapIterator iterator(*this); !iterator.isPastEnd(); ++iterator)
   {
     const size_t i = iterator.getLinearIndex();
@@ -82,9 +87,8 @@ void FeatureMap::update(double local_patch_radius)
 }
 }  // namespace grid_map
 
-void TerrainDescriptor::setLocalPatchRadius(double radius)
+TerrainDescriptor::TerrainDescriptor(double radius) : local_radius_(radius)
 {
-  local_radius_ = radius;
 }
 
 bool TerrainDescriptor::principleComponentAnalysisAt(const grid_map::HeightMap& map, const grid_map::Index& index)

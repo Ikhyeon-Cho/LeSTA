@@ -1,0 +1,10 @@
+featureMapCloudTopic: &feature_cloud_topic "/height_mapping/features/pointcloud" # Label generator subscribes to this topic
+surfaceNormalTopic: &surface_normal_topic "/height_mapping/features/surface_normals"
+
+grid_map_topic: *traversability_map_topic
+grid_map_visualizations:
+  # Point cloud
+  - name: *traversability_cloud_topic
+    type: point_cloud
+    params:
+      layer: elevation

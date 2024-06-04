@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "traversability_prediction");
 
-  TraversabilityPrediction traversability_prediction_node;
+  TraversabilityPrediction node;
 
   ros::spin();
 

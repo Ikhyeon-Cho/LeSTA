@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "feature_extraction");
 
-  FeatureExtraction feature_extraction_node;
+  FeatureExtraction node;
 
   ros::spin();
 

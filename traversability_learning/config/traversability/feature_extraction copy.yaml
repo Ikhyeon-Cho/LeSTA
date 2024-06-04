@@ -1,14 +1,6 @@
-height_mapping: # this overrides the height_mapping package's yaml
-  # Height map Parameters:
-  gridResolution: 0.1
-  mapLengthX: 30.0
-  mapLengthY: 30.0
-
-  # Topics:
-  heightMapCloudTopic: "/height_mapping/elevation_cloud" # Feature extraction subscribes to this topic
-
 feature_extraction:
   # Topics:
+  heightMapTopic: "/height_mapping/map/gridmap" # Feature extraction subscribes to this topic
   featureMapTopic: &feature_map_topic "/traversability_learning/feature_grid"
   featureMapCloudTopic: &feature_cloud_topic "/traversability_learning/feature_cloud" # Label generator subscribes to this topic
   surfaceNormalTopic: &surface_normal_topic "/traversability_learning/surface_normals"

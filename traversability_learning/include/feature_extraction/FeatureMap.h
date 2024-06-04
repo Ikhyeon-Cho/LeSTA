@@ -23,20 +23,26 @@ public:
   using Ptr = std::shared_ptr<FeatureMap>;
 
   FeatureMap(const HeightMap& map);
+
   FeatureMap(double map_length_x, double map_length_y, double resolution);
+
   bool initializeFrom(const HeightMap& map);
 
-  void update(double local_patch_radius);
+  void setFeatureExtractionRadius(double radius);
+
+  void update();
 
   // void update(std::vector<grid_map::Index> cell_indices);
+
+private:
+  double normal_estimation_radius_{ 0.15 };  // Default: 15cm radius circle as local area
 };
 }  // namespace grid_map
 
 class TerrainDescriptor
 {
 public:
-  TerrainDescriptor() = default;
-  void setLocalPatchRadius(double radius);
+  TerrainDescriptor(double radius);
 
   bool principleComponentAnalysisAt(const grid_map::HeightMap& map, const grid_map::Index& index);
 
@@ -52,7 +58,7 @@ private:
   const double& getSmallestEigenValue() const;
 
   // local patch size
-  double local_radius_{ 0.15 };  // Default: 15cm radius circle as local area
+  double local_radius_;
 
   // points in local
   std::vector<Eigen::Vector3d> descriptor_points_;
