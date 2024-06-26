@@ -1,9 +1,11 @@
 # Traversability Mapping ROS Package
 
 ## Overview
-The Traversability Mapping ROS package is designed for outdoor mobile robot navigation. This package provides tools and functionalities for robots to navigate through various outdoor terrains by assessing traversability.
+The Traversability Mapping ROS package is designed for outdoor mobile robot navigation. This package provides tools and functionalities for robots to navigate through various outdoor terrains by assessing terrain traversability.
 
-## Repository Contents
+**README will be updated soon!**
+
+<!-- ## Repository Contents
 - `config`: Configuration files.
 - `include`: Header files.
 - `launch`: ROS launch files.
@@ -44,7 +46,7 @@ To start with local traversability mapping, use command
 
 ### Node: local_terrain_mapping
 
-This is the main Robot-Centric Elevation Mapping node. It uses the distance sensor measurements and the pose and covariance of the robot to generate an elevation map with variance estimates.
+This is the main Robot-Centric Elevation Mapping node. It uses the distance sensor measurements and the pose and covariance of the robot to generate an elevation map with variance estimates. -->
 
 
 #### Subscribed Topics
