@@ -1,0 +1,7 @@
+grid_map_topic: "/traversability_learning/label/gridmap"
+grid_map_visualizations:
+  # Point cloud
+  - name: "/traversability_learning/label/pointcloud"
+    type: point_cloud
+    params:
+      layer: elevation

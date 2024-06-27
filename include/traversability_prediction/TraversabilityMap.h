@@ -14,7 +14,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <Eigen/Dense>
-#include "label_generation/Traversability.h"
+#include "label_generation/TraversabilityInfo.h"
 
 class TraversabilityClassifier;
 

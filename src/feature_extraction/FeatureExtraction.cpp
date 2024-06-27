@@ -8,22 +8,23 @@
  */
 
 #include "feature_extraction/FeatureExtraction.h"
+#include <chrono>
 
 FeatureExtraction::FeatureExtraction()
 {
-  feature_map_->setFrameId(map_frame);
-  feature_map_->setNormalEstimationRadius(normal_estimation_radius_);
+  map_->setFrameId(map_frame);
+  map_->setNormalEstimationRadius(normal_estimation_radius_);
 }
 
 void FeatureExtraction::HeightMapCallback(const grid_map_msgs::GridMapConstPtr& msg)
 {
   // Convert grid map msg to grid map
-  grid_map::GridMapRosConverter::fromMessage(*msg, *feature_map_);
+  grid_map::GridMapRosConverter::fromMessage(*msg, *map_);
 
-  feature_map_->update();
+  map_->extractFeatures();
 
   // Publish the map
   grid_map_msgs::GridMap message;
-  grid_map::GridMapRosConverter::toMessage(*feature_map_, message);
+  grid_map::GridMapRosConverter::toMessage(*map_, message);
   pub_featuremap_.publish(message);
 }

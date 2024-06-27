@@ -7,8 +7,8 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#ifndef LABEL_GENERATION_H
-#define LABEL_GENERATION_H
+#ifndef TRAVERSABILITY_LABEL_GENERATION_H
+#define TRAVERSABILITY_LABEL_GENERATION_H
 
 #include <ros/ros.h>
 #include "ros_utils/TransformHandler.h"
@@ -17,44 +17,33 @@
 #include <height_map_msgs/HeightMapConverter.h>
 #include <height_map_msgs/HeightMapMsgs.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include "label_generation/Traversability.h"
+#include <std_srvs/Empty.h>
+
+#include "label_generation/TraversabilityInfo.h"
+#include "feature_extraction/FeatureMap.h"
 
 class TraversabilityLabelGeneration
 {
 public:
-  TraversabilityLabelGeneration();
+  TraversabilityLabelGeneration() = default;
 
-  bool updateMeasuredIndices(const grid_map::HeightMap& map, const pcl::PointCloud<pcl::PointXYZ>& cloud);
+  void featureMapCallback(const grid_map_msgs::GridMapConstPtr& msg);
 
-  void featureCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
+  void generateTraversabilityLabels();
 
-  void generateLabels(const ros::TimerEvent& event);
+  void generateTraversabilityLabels(const sensor_msgs::PointCloud2ConstPtr& cloud);
 
-  void publishLabeledMap(const ros::TimerEvent& event);
+  bool saveLabeledData(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
 private:
   ros::NodeHandle nh_{ "height_mapping" };
   ros::NodeHandle nh2_{ "feature_extraction" };
   ros::NodeHandle pnh_{ "~" };
 
-  utils::TransformHandler tf_tree_;  // For pose update
+  utils::TransformHandler tf_;  // For pose update
 
-  // Topics
-  std::string feature_cloud_topic_{ nh2_.param<std::string>("featureMapCloudTopic", "/feature_cloud") };
-  std::string label_cloud_topic_{ pnh_.param<std::string>("labelMapTopic", "/label_cloud") };
-
-  // Frame Ids
   std::string baselink_frame{ nh_.param<std::string>("baseLinkFrame", "base_link") };
   std::string map_frame{ nh_.param<std::string>("mapFrame", "map") };
-
-  // Height Map Parameters
-  double grid_resolution_{ nh_.param<double>("gridResolution", 0.1) };   // meter per grid
-  double map_length_x_{ nh_.param<double>("mapLengthXGlobal", 400.0) };  // meters
-  double map_length_y_{ nh_.param<double>("mapLengthYGlobal", 400.0) };  // meters
-
-  // Duration
-  double footprint_recording_rate_{ pnh_.param<double>("footprintRecordingRate", 10) };  // Hz
-  double visualization_rate_{ pnh_.param<double>("visualizationRate", 10) };             // Hz
 
   // Labeling Parameters
   double footprint_radius_{ pnh_.param<double>("footprintRadius", 0.5) };               // meters
@@ -62,25 +51,34 @@ private:
   double max_acceptable_slope_{ pnh_.param<double>("maxAcceptableTerrainSlope", 20) };  // degrees
 
   // ROS
-  ros::Subscriber sub_feature_cloud_{ nh2_.subscribe(feature_cloud_topic_, 10,
-                                                     &TraversabilityLabelGeneration::featureCloudCallback, this) };
-  // ros::Publisher pub_labelmap_{ pnh_.advertise<grid_map_msgs::GridMap>(label_cloud_topic_, 10) };
-  ros::Publisher pub_label_cloud_{ pnh_.advertise<sensor_msgs::PointCloud2>(label_cloud_topic_, 10) };
-  ros::Timer footprint_record_timer_{ nh_.createTimer(footprint_recording_rate_,
-                                                      &TraversabilityLabelGeneration::generateLabels, this) };
-  ros::Timer visualization_timer_{ nh_.createTimer(visualization_rate_,
-                                                   &TraversabilityLabelGeneration::publishLabeledMap, this) };
+  ros::Subscriber sub_feature_map_{ nh_.subscribe("/traversability_estimation/features/gridmap", 1,
+                                                  &TraversabilityLabelGeneration::featureMapCallback, this) };
+  ros::Subscriber sub_globalmap_{ nh_.subscribe("/height_mapping/globalmap/pointcloud", 1,
+                                                &TraversabilityLabelGeneration::generateTraversabilityLabels, this) };
+  ros::Publisher pub_labelmap_{ pnh_.advertise<grid_map_msgs::GridMap>("/traversability_learning/label/gridmap", 10) };
+
+  ros::ServiceServer labeled_csv_saver_{ pnh_.advertiseService("save_labeled_data",
+                                                               &TraversabilityLabelGeneration::saveLabeledData, this) };
 
 private:
-  void recordFootprintAt(const grid_map::Position& robot_position);
+  bool is_labelmap_initialized_{ false };
 
-  void recordOverThresholdAreas();
+  bool is_labeling_callback_activated_{ false };
 
-  void recordUnknownAreas();
+  void initializeLabelMap();
 
-  // Since the map size is fixed, it is more efficient to assign memory before start
-  grid_map::HeightMap labeled_map_{ map_length_x_, map_length_y_, grid_resolution_ };
-  std::vector<grid_map::Index> measured_indices_;
+  void recordFootprint(grid_map::HeightMap& labelmap);
+
+  void recordOverThresholdAreas(grid_map::HeightMap& labelmap);
+
+  void recordUnknownAreas(grid_map::HeightMap& labelmap);
+
+  void saveLabeledDataToCSV(const grid_map::HeightMap& labelmap);
+
+  void saveUnlabeledDataToCSV(const grid_map::HeightMap& labelmap);
+
+  grid_map::HeightMap::Ptr labelmap_;
+  grid_map::GridMap featuremap_;
 };
 
-#endif /* LABEL_GENERATION_H */
+#endif /* TRAVERSABILITY_LABEL_GENERATION_H */

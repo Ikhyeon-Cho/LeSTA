@@ -46,7 +46,7 @@ private:
 
 private:
   // arbitrary values: real size will be determined by the input map
-  grid_map::FeatureMap::Ptr feature_map_{ std::make_shared<grid_map::FeatureMap>(10, 10, 0.1) };
+  grid_map::FeatureMap::Ptr map_{ std::make_shared<grid_map::FeatureMap>(10, 10, 0.1) };
 };
 
 #endif  // FEATURE_EXTRACTION_H

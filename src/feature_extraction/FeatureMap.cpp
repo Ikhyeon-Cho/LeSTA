@@ -29,7 +29,9 @@ FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resoluti
     addLayer(feature_layer, 0.0f);
     std::cout << "[@ FeatureMap] Added " << feature_layer << " layer to the height map" << std::endl;
   }
-  setBasicLayers(feature_layers);
+  auto basic_layers = feature_layers;
+  basic_layers.push_back("elevation");
+  setBasicLayers(basic_layers);
 
   // Normal layers for 3D normal vector visualization
   std::vector<std::string> normal_layers{ "normal_x", "normal_y", "normal_z" };
@@ -61,7 +63,7 @@ bool FeatureMap::initializeFrom(const HeightMap& map)
   return true;
 }
 
-void FeatureMap::update()
+void FeatureMap::extractFeatures()
 {
   const auto& height_matrix = getHeightMatrix();
   TerrainDescriptor descriptor(normal_estimation_radius_);
@@ -87,7 +89,7 @@ void FeatureMap::update()
 }
 }  // namespace grid_map
 
-TerrainDescriptor::TerrainDescriptor(double radius) : local_radius_(radius)
+TerrainDescriptor::TerrainDescriptor(double radius) : pca_region_radius_(radius)
 {
 }
 
@@ -98,7 +100,8 @@ bool TerrainDescriptor::principleComponentAnalysisAt(const grid_map::HeightMap& 
   grid_map::Position queried_cell_position;
   map.getPosition(index, queried_cell_position);
 
-  for (grid_map::CircleIterator iterator(map, queried_cell_position, 0.15); !iterator.isPastEnd(); ++iterator)
+  for (grid_map::CircleIterator iterator(map, queried_cell_position, pca_region_radius_); !iterator.isPastEnd();
+       ++iterator)
   {
     Eigen::Vector3d point;
     if (!map.getPosition3(map.getHeightLayer(), *iterator, point))

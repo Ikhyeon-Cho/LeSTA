@@ -1,24 +1,17 @@
 <launch>
-  <arg name="input_cloud" default="/velodyne_tilted/velodyne_points" />
-
-  <!-- Height mapping -->
-  <include file="$(find height_mapping)/launch/height_mapping.launch">
-    <arg name="input_cloud" value="$(arg input_cloud)" />
-  </include>
-
-  <!-- Assign Parameters to Server -->
-  <rosparam file="$(find traversability_learning)/launch/config/params.yaml" command="load" subst_value="true" />
-
   <!-- Terrain Feature Extraction -->
-  <node pkg="traversability_learning" type="feature_extraction_node" name="feature_extraction" output="screen">
-    <param name="localPatchRadius" value="0.20" />
-  </node>
-
-  <!-- Feature Map Visualization -->
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="feature_extraction_visualization"
-    output="screen" />
+  <include file="$(find self_supervised_traversability)/launch/feature_extraction.launch" />
 
   <!-- Traversability Label Generation -->
-  <node pkg="traversability_learning" type="label_generation_node" name="label_generation" output="screen" />
+  <node pkg="self_supervised_traversability" type="label_generation_node" name="label_generation" output="screen" />
 
+  <!-- Traversability Label Visualization -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="label_visualization" output="log">
+    <rosparam file="$(find self_supervised_traversability)/config/label_generation/visualization.yaml" />
+  </node>
+
+  <!-- Global mapping -->
+  <node pkg="height_mapping" type="global_mapping_node" name="label_mapping">
+    <remap from="/height_mapping/map/gridmap" to="/traversability_learning/label/gridmap" />
+  </node>
 </launch>

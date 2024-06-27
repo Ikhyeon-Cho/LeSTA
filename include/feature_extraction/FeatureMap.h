@@ -30,7 +30,7 @@ public:
 
   void setNormalEstimationRadius(double radius);
 
-  void update();
+  void extractFeatures();
 
   // void update(std::vector<grid_map::Index> cell_indices);
 
@@ -57,8 +57,8 @@ private:
   bool doEigenDecomposition();
   const double& getSmallestEigenValue() const;
 
-  // local patch size
-  double local_radius_;
+  // parameters
+  double pca_region_radius_;
 
   // points in local
   std::vector<Eigen::Vector3d> descriptor_points_;

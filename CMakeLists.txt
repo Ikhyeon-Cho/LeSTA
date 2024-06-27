@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(traversability_learning)
+project(self_supervised_traversability)
 add_compile_options(-std=c++17)
 
 find_package(PCL REQUIRED)
@@ -15,7 +15,7 @@ catkin_package(
   INCLUDE_DIRS 
     include
   LIBRARIES 
-    # traversability_learning
+    ${PROJECT_NAME}
   CATKIN_DEPENDS 
     roscpp
     tf2_ros
@@ -35,6 +35,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+# Node: Feature extraction
 add_executable(feature_extraction_node 
   src/feature_extraction/feature_extraction_node.cpp
   src/feature_extraction/FeatureExtraction.cpp
@@ -45,7 +46,9 @@ target_link_libraries(feature_extraction_node
   ${catkin_LIBRARIES}
 )
 
+# Node: Label generation
 add_executable(label_generation_node
+  src/feature_extraction/FeatureMap.cpp
   src/label_generation/label_generation_node.cpp
   src/label_generation/LabelGeneration.cpp
 )
@@ -54,6 +57,7 @@ target_link_libraries(label_generation_node
   ${catkin_LIBRARIES}
 )
 
+# Node: Traversability prediction
 add_executable(traversability_prediction_node
   src/traversability_prediction/traversability_prediction_node.cpp
   src/traversability_prediction/TraversabilityPrediction.cpp

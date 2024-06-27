@@ -9,141 +9,250 @@
 
 #include "label_generation/LabelGeneration.h"
 
-TraversabilityLabelGeneration::TraversabilityLabelGeneration()
+void TraversabilityLabelGeneration::featureMapCallback(const grid_map_msgs::GridMapConstPtr& msg)
 {
-  labeled_map_.setFrameId(map_frame);
-  labeled_map_.setPosition(grid_map::Position(labeled_map_.getLength().x() / 2, labeled_map_.getLength().y() / 2));
-
-  labeled_map_.addLayer("traversability_label");
-  std::cout << "[@ LabelMap] Added traversability_label layer to the label map \n";
-}
-
-void TraversabilityLabelGeneration::featureCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
-{
-  // Convert PointCloud2 to PCL
-  auto feature_cloud_pcl = boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
-  pcl::fromROSMsg(*msg, *feature_cloud_pcl);
-
-  // Update measured indices -> make large-scale visualization process more efficient
-  if (!updateMeasuredIndices(labeled_map_, *feature_cloud_pcl))
+  grid_map::GridMapRosConverter::fromMessage(*msg, featuremap_);
+  if (!is_labelmap_initialized_)
   {
-    ROS_WARN("Feature cloud is empty. Skip this cloud.");
-    return;
+    initializeLabelMap();
+    is_labelmap_initialized_ = true;
   }
 
-  // Convert PointCloud2 to HeightMap with features
-  HeightMapConverter::fromPointCloud2(*msg, labeled_map_);
+  // Align the label map with the feature map
+  labelmap_->move(featuremap_.getPosition());
+
+  // Copy the feature map values
+  labelmap_->getHeightMatrix() = featuremap_["elevation"];
+  labelmap_->getVarianceMatrix() = featuremap_["variance"];
+  labelmap_->get("step") = featuremap_["step"];
+  labelmap_->get("slope") = featuremap_["slope"];
+  labelmap_->get("roughness") = featuremap_["roughness"];
+  labelmap_->get("curvature") = featuremap_["curvature"];
+
+  generateTraversabilityLabels();
+
+  // Publish the labeled map
+  grid_map_msgs::GridMap labelmap_msg;
+  grid_map::GridMapRosConverter::toMessage(*labelmap_, labelmap_msg);
+  pub_labelmap_.publish(labelmap_msg);
 }
 
-bool TraversabilityLabelGeneration::updateMeasuredIndices(const grid_map::HeightMap& map,
-                                                          const pcl::PointCloud<pcl::PointXYZ>& cloud)
+void TraversabilityLabelGeneration::initializeLabelMap()
 {
-  if (cloud.empty())
-    return false;
+  // Define map geometry
+  auto map_length = featuremap_.getLength();
+  auto map_resolution = featuremap_.getResolution();
+  labelmap_ = std::make_shared<grid_map::HeightMap>(map_length.x(), map_length.y(), map_resolution);
+  labelmap_->setFrameId(featuremap_.getFrameId());
 
-  // Save measured indices for efficient visualization
-  grid_map::Index cell_index;
-  grid_map::Position cell_position;
-  for (auto& point : cloud.points)
-  {
-    // Skip if the point is out of the map
-    cell_position << point.x, point.y;
-    if (!map.getIndex(cell_position, cell_index))
-      continue;
-
-    if (!map.isEmptyAt(cell_index))
-      continue;
-
-    measured_indices_.push_back(cell_index);
-  }
-
-  return true;
+  // Add layers
+  labelmap_->addLayer("elevation");
+  labelmap_->addLayer("variance");
+  labelmap_->addLayer("step");
+  labelmap_->addLayer("slope");
+  labelmap_->addLayer("roughness");
+  labelmap_->addLayer("curvature");
+  labelmap_->addLayer("footprints");
+  labelmap_->addLayer("traversability_label");
+  labelmap_->setBasicLayers({ "elevation", "variance" });
 }
 
-void TraversabilityLabelGeneration::generateLabels(const ros::TimerEvent& event)
+void TraversabilityLabelGeneration::generateTraversabilityLabels()
 {
-  // Get Transform from base_link to map (localization pose)
-  auto [get_transform_b2m, base_to_map] = tf_tree_.getTransform(baselink_frame, map_frame);
+  // negative label
+  recordOverThresholdAreas(*labelmap_);
+
+  // positive label
+  recordFootprint(*labelmap_);
+
+  // recordUnknownAreas();
+}
+
+void TraversabilityLabelGeneration::recordFootprint(grid_map::HeightMap& labelmap)
+{
+  // Get Transform from base_link to map (typically provided by 3D pose estimator)
+  auto [get_transform_b2m, base2map] = tf_.getTransform(baselink_frame, map_frame);
   if (!get_transform_b2m)
     return;
 
-  // Record the footprints (positive label)
-  grid_map::Position robot_position(base_to_map.transform.translation.x, base_to_map.transform.translation.y);
-  recordFootprintAt(robot_position);
+  grid_map::Position footprint(base2map.transform.translation.x, base2map.transform.translation.y);
+  grid_map::CircleIterator iterator(labelmap, footprint, footprint_radius_);
 
-  // Record the over-threshold areas (negative label)
-  recordOverThresholdAreas();
-
-  // Record the unknown areas
-  recordUnknownAreas();
-}
-
-void TraversabilityLabelGeneration::recordFootprintAt(const grid_map::Position& footprint_position)
-{
-  for (grid_map::CircleIterator iterator(labeled_map_, footprint_position, footprint_radius_); !iterator.isPastEnd();
-       ++iterator)
+  for (iterator; !iterator.isPastEnd(); ++iterator)
   {
-    Eigen::Vector3d point;
-    if (!labeled_map_.getPosition3(labeled_map_.getHeightLayer(), *iterator, point))
+    Eigen::Vector3d grid_with_elevation;
+    if (!labelmap.getPosition3(labelmap.getHeightLayer(), *iterator, grid_with_elevation))
       continue;
 
-    labeled_map_.at("traversability_label", *iterator) = (float)Traversability::TRAVERSABLE;
-  }  // circle iterator ends
+    labelmap.at("traversability_label", *iterator) = (float)Traversability::TRAVERSABLE;
+    labelmap.at("footprints", *iterator) = (float)Traversability::TRAVERSABLE;
+  }
 }
 
-void TraversabilityLabelGeneration::recordOverThresholdAreas()
+void TraversabilityLabelGeneration::recordOverThresholdAreas(grid_map::HeightMap& labelmap)
 {
-  for (auto index : measured_indices_)
+  for (grid_map::GridMapIterator iter(labelmap); !iter.isPastEnd(); ++iter)
   {
-    // Skip if the cell is already labeled
-    const auto& traversability_label = labeled_map_.at("traversability_label", index);
-    bool has_label = std::isfinite(traversability_label);
-    if (has_label)
+    Eigen::Vector3d grid_with_elevation;
+    if (!labelmap.getPosition3(labelmap.getHeightLayer(), *iter, grid_with_elevation))
       continue;
 
-    // bool is_non_traversable = (labeled_map_.at("slope", index) > max_acceptable_slope_ &&
-    //                            labeled_map_.at("step", index) > max_acceptable_step_);
-    bool is_non_traversable = labeled_map_.at("step", index) > max_acceptable_step_;
-    if (is_non_traversable)
+    // bool non_traversable = (labelmap.at("slope", *iter) > max_acceptable_slope_ &&
+    //                            labelmap.at("step", *iter) > max_acceptable_step_);
+
+    if (!std::isfinite(labelmap.at("step", *iter)))
+      continue;
+
+    bool non_traversable = labelmap.at("step", *iter) > max_acceptable_step_;
+    if (non_traversable)
     {
-      labeled_map_.at("traversability_label", index) = (float)Traversability::NON_TRAVERSABLE;
+      labelmap.at("traversability_label", *iter) = (float)Traversability::NON_TRAVERSABLE;
+      continue;
+    }
+
+    bool LABEL_EQUALS_NON_TRAVERSABLE =
+        std::abs(labelmap.at("traversability_label", *iter) - (float)Traversability::NON_TRAVERSABLE) < 1e-6;
+    if (LABEL_EQUALS_NON_TRAVERSABLE)
+    {
+      labelmap.at("traversability_label", *iter) = NAN;
     }
   }
 }
 
-void TraversabilityLabelGeneration::recordUnknownAreas()
+void TraversabilityLabelGeneration::recordUnknownAreas(grid_map::HeightMap& labelmap)
 {
-  for (auto index : measured_indices_)
+  for (grid_map::GridMapIterator iter(labelmap); !iter.isPastEnd(); ++iter)
   {
-    // Skip if the cell is already labeled
-    const auto& traversability_label = labeled_map_.at("traversability_label", index);
-    bool has_label = std::isfinite(traversability_label);
-    bool is_traversable = std::abs(traversability_label - (float)Traversability::TRAVERSABLE) < 1e-6;
-    // bool is_non_traversable = (labeled_map_.at("slope", index) > max_acceptable_slope_ &&
-    //                            labeled_map_.at("step", index) > max_acceptable_step_);
-    bool is_non_traversable = labeled_map_.at("step", index) > max_acceptable_step_;
+    Eigen::Vector3d grid_with_elevation;
+    if (!labelmap.getPosition3(labelmap.getHeightLayer(), *iter, grid_with_elevation))
+      continue;
 
+    const auto& traversability_label = labelmap.at("traversability_label", *iter);
+    bool has_label = std::isfinite(traversability_label);
     if (has_label)
-    {
-      if (is_traversable)
-        continue;
-      if (is_non_traversable)
-        continue;
-      else
-        labeled_map_.at("traversability_label", index) = (float)Traversability::UNKNOWN;
-    }
-    else
-      labeled_map_.at("traversability_label", index) = (float)Traversability::UNKNOWN;
+      continue;
+
+    labelmap.at("traversability_label", *iter) = (float)Traversability::UNKNOWN;
   }
 }
 
-void TraversabilityLabelGeneration::publishLabeledMap(const ros::TimerEvent& event)
+bool TraversabilityLabelGeneration::saveLabeledData(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res)
 {
-  // Publish the labeled cloud
-  sensor_msgs::PointCloud2 labeled_cloud_msg;
-  auto layer_to_visualize =
-      std::vector<std::string>{ "elevation",           "step", "slope", "roughness", "curvature", "variance",
-                                "traversability_label" };
-  HeightMapConverter::toPointCloud2(labeled_map_, layer_to_visualize, measured_indices_, labeled_cloud_msg);
-  pub_label_cloud_.publish(labeled_cloud_msg);
+  is_labeling_callback_activated_ = true;
+  std::cout << "Generating Traversability Labels..." << std::endl;
+
+  // See generateTraversabilityLabels callback
+  return true;
+}
+
+void TraversabilityLabelGeneration::generateTraversabilityLabels(const sensor_msgs::PointCloud2ConstPtr& cloud)
+{
+  if (!is_labeling_callback_activated_)
+    return;
+
+  // Load globalmap info
+  double map_length_x;
+  double map_length_y;
+  double grid_resolution;
+  if (!ros::param::get("/height_mapping/global_mapping/mapLengthXGlobal", map_length_x))
+  {
+    ROS_ERROR("[LabelGenerationService] Failed to get global map parameter");
+    return;
+  }
+  ros::param::get("/height_mapping/global_mapping/mapLengthYGlobal", map_length_y);
+  ros::param::get("/height_mapping/global_mapping/gridResolution", grid_resolution);
+
+  // Load feature extraction parameter
+  double normal_estimation_radius;
+  if (!ros::param::get("/feature_extraction/normalEstimationRadius", normal_estimation_radius))
+  {
+    ROS_ERROR("[LabelGenerationService] Failed to get feature extraction parameter");
+    return;
+  }
+
+  // Feature extraction of Global map
+  auto pointcloud = *cloud;
+  grid_map::FeatureMap featuremap(map_length_x, map_length_y, grid_resolution);
+  featuremap.setNormalEstimationRadius(normal_estimation_radius);
+  HeightMapConverter::fromPointCloud2(pointcloud, featuremap);
+  featuremap.extractFeatures();
+
+  // Label generation: Non-traversable areas
+  recordOverThresholdAreas(featuremap);
+
+  // Save labeled data to csv
+  saveLabeledDataToCSV(featuremap);
+
+  recordUnknownAreas(featuremap);
+
+  saveUnlabeledDataToCSV(featuremap);
+
+  // Publish featuremap
+  grid_map_msgs::GridMap featuremap_msg;
+  grid_map::GridMapRosConverter::toMessage(featuremap, featuremap_msg);
+  pub_labelmap_.publish(featuremap_msg);
+  ros::Duration(10).sleep();
+
+  std::cout << "sub test" << std::endl;
+
+  is_labeling_callback_activated_ = false;
+}
+
+void TraversabilityLabelGeneration::saveLabeledDataToCSV(const grid_map::HeightMap& labelmap)
+{
+  std::string filename = "/home/ikhyeon/labeled_data.csv";
+  std::ofstream file(filename);
+  file << "step,slope,roughness,curvature,variance,traversability_label\n";  // header
+
+  // Iterate over the grid map
+  for (grid_map::GridMapIterator iter(labelmap); !iter.isPastEnd(); ++iter)
+  {
+    if (labelmap.isEmptyAt(*iter))
+      continue;
+
+    // Write data to csv
+    float step = labelmap.at("step", *iter);
+    float slope = labelmap.at("slope", *iter);
+    float roughness = labelmap.at("roughness", *iter);
+    float curvature = labelmap.at("curvature", *iter);
+    float variance = labelmap.at("variance", *iter);
+    float traversability_label = labelmap.at("traversability_label", *iter);
+
+    if (!std::isfinite(traversability_label))
+      continue;
+
+    file << step << "," << slope << "," << roughness << "," << curvature << "," << variance << ","
+         << traversability_label << "\n";
+  }
+
+  file.close();
+}
+
+void TraversabilityLabelGeneration::saveUnlabeledDataToCSV(const grid_map::HeightMap& labelmap)
+{
+  std::string filename = "/home/ikhyeon/unlabeled_data.csv";
+  std::ofstream file(filename);
+  file << "step,slope,roughness,curvature,variance,traversability_label\n";  // header
+
+  // Iterate over the grid map
+  for (grid_map::GridMapIterator iter(labelmap); !iter.isPastEnd(); ++iter)
+  {
+    if (labelmap.isEmptyAt(*iter))
+      continue;
+
+    // Write data to csv
+    float step = labelmap.at("step", *iter);
+    float slope = labelmap.at("slope", *iter);
+    float roughness = labelmap.at("roughness", *iter);
+    float curvature = labelmap.at("curvature", *iter);
+    float variance = labelmap.at("variance", *iter);
+    float traversability_label = labelmap.at("traversability_label", *iter);
+
+    if (traversability_label < (float)Traversability::UNKNOWN - 1e-6)
+      continue;
+
+    file << step << "," << slope << "," << roughness << "," << curvature << "," << variance << ","
+         << traversability_label << "\n";
+  }
+  file.close();
 }

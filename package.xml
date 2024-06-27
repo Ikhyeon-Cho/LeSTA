@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>traversability_learning</name>
+  <name>self_supervised_traversability</name>
   <version>0.0.0</version>
-  <description>The traversability_learning package</description>
+  <description>The self_supervised_traversability package</description>
   <maintainer email="tre0430@korea.ac.kr">Ikhyeon Cho</maintainer>
   <license>.</license>
 
