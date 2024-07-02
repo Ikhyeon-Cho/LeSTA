@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.0.2)
 project(self_supervised_traversability)
 add_compile_options(-std=c++17)
 
+# Define the relative path to LibTorch
+set(Torch_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/libs/libtorch)
+find_package(Torch REQUIRED HINTS ${Torch_DIR})
+
 find_package(PCL REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
@@ -33,6 +37,7 @@ include_directories(
   include
   ${PCL_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
+  ${TORCH_INCLUDE_DIRS}
 )
 
 # Node: Feature extraction
@@ -62,8 +67,10 @@ add_executable(traversability_prediction_node
   src/traversability_prediction/traversability_prediction_node.cpp
   src/traversability_prediction/TraversabilityPrediction.cpp
   src/traversability_prediction/TraversabilityMap.cpp
+  src/traversability_prediction/classifiers/LearnedTraversability.cpp
 )
 target_link_libraries(traversability_prediction_node
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
+  ${TORCH_LIBRARIES}
 )

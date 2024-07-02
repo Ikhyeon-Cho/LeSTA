@@ -1,5 +1,4 @@
 <launch>
-
   <!-- Terrain Feature Extraction -->
   <node pkg="self_supervised_traversability" type="feature_extraction_node" name="feature_extraction" output="screen">
     <rosparam file="$(find self_supervised_traversability)/config/feature_extraction/params.yaml" command="load" />

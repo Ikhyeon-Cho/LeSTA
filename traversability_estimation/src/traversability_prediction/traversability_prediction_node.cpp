@@ -9,6 +9,8 @@
 
 #include <ros/ros.h>
 #include "traversability_prediction/TraversabilityPrediction.h"
+#include <chrono>
+
 
 int main(int argc, char** argv)
 {

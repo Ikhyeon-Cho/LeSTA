@@ -1,0 +1,4 @@
+footprintRadius: 0.5
+maxAcceptableTerrainStep: 0.1
+pathToLabeledData: "$(find self_supervised_traversability)/../self_supervised_learning/data/labeled_data.csv"
+pathToUnlabeledData: "$(find self_supervised_traversability)/../self_supervised_learning/data/unlabeled_data.csv"

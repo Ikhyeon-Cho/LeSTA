@@ -32,8 +32,6 @@ public:
 
   void extractFeatures();
 
-  // void update(std::vector<grid_map::Index> cell_indices);
-
 private:
   double normal_estimation_radius_{ 0.15 };  // Default: 15cm radius circle as local area
 };

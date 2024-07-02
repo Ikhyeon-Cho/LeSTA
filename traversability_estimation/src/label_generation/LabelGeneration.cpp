@@ -22,8 +22,8 @@ void TraversabilityLabelGeneration::featureMapCallback(const grid_map_msgs::Grid
   labelmap_->move(featuremap_.getPosition());
 
   // Copy the feature map values
-  labelmap_->getHeightMatrix() = featuremap_["elevation"];
-  labelmap_->getVarianceMatrix() = featuremap_["variance"];
+  labelmap_->getHeightMatrix() = featuremap_.getHeightMatrix();
+  labelmap_->getVarianceMatrix() = featuremap_.getVarianceMatrix();
   labelmap_->get("step") = featuremap_["step"];
   labelmap_->get("slope") = featuremap_["slope"];
   labelmap_->get("roughness") = featuremap_["roughness"];
@@ -97,24 +97,24 @@ void TraversabilityLabelGeneration::recordOverThresholdAreas(grid_map::HeightMap
     if (!labelmap.getPosition3(labelmap.getHeightLayer(), *iter, grid_with_elevation))
       continue;
 
-    // bool non_traversable = (labelmap.at("slope", *iter) > max_acceptable_slope_ &&
-    //                            labelmap.at("step", *iter) > max_acceptable_step_);
-
     if (!std::isfinite(labelmap.at("step", *iter)))
       continue;
 
+    // Condition for non-traversable areas
     bool non_traversable = labelmap.at("step", *iter) > max_acceptable_step_;
     if (non_traversable)
     {
       labelmap.at("traversability_label", *iter) = (float)Traversability::NON_TRAVERSABLE;
       continue;
     }
-
-    bool LABEL_EQUALS_NON_TRAVERSABLE =
-        std::abs(labelmap.at("traversability_label", *iter) - (float)Traversability::NON_TRAVERSABLE) < 1e-6;
-    if (LABEL_EQUALS_NON_TRAVERSABLE)
+    else  // Remove noisy labels
     {
-      labelmap.at("traversability_label", *iter) = NAN;
+      bool label_conflict =
+          std::abs(labelmap.at("traversability_label", *iter) - (float)Traversability::NON_TRAVERSABLE) < 1e-6;
+      if (label_conflict)
+      {
+        labelmap.at("traversability_label", *iter) = NAN;
+      }
     }
   }
 }
@@ -138,7 +138,7 @@ void TraversabilityLabelGeneration::recordUnknownAreas(grid_map::HeightMap& labe
 
 bool TraversabilityLabelGeneration::saveLabeledData(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res)
 {
-  is_labeling_callback_activated_ = true;
+  is_labeling_callback_working_ = true;
   std::cout << "Generating Traversability Labels..." << std::endl;
 
   // See generateTraversabilityLabels callback
@@ -147,7 +147,7 @@ bool TraversabilityLabelGeneration::saveLabeledData(std_srvs::Empty::Request& re
 
 void TraversabilityLabelGeneration::generateTraversabilityLabels(const sensor_msgs::PointCloud2ConstPtr& cloud)
 {
-  if (!is_labeling_callback_activated_)
+  if (!is_labeling_callback_working_)
     return;
 
   // Load globalmap info
@@ -180,28 +180,19 @@ void TraversabilityLabelGeneration::generateTraversabilityLabels(const sensor_ms
   // Label generation: Non-traversable areas
   recordOverThresholdAreas(featuremap);
 
-  // Save labeled data to csv
   saveLabeledDataToCSV(featuremap);
 
+  // Mark unknown areas as unknown
   recordUnknownAreas(featuremap);
 
   saveUnlabeledDataToCSV(featuremap);
 
-  // Publish featuremap
-  grid_map_msgs::GridMap featuremap_msg;
-  grid_map::GridMapRosConverter::toMessage(featuremap, featuremap_msg);
-  pub_labelmap_.publish(featuremap_msg);
-  ros::Duration(10).sleep();
-
-  std::cout << "sub test" << std::endl;
-
-  is_labeling_callback_activated_ = false;
+  is_labeling_callback_working_ = false;
 }
 
 void TraversabilityLabelGeneration::saveLabeledDataToCSV(const grid_map::HeightMap& labelmap)
 {
-  std::string filename = "/home/ikhyeon/labeled_data.csv";
-  std::ofstream file(filename);
+  std::ofstream file(labeled_data_path_);
   file << "step,slope,roughness,curvature,variance,traversability_label\n";  // header
 
   // Iterate over the grid map
@@ -230,8 +221,7 @@ void TraversabilityLabelGeneration::saveLabeledDataToCSV(const grid_map::HeightM
 
 void TraversabilityLabelGeneration::saveUnlabeledDataToCSV(const grid_map::HeightMap& labelmap)
 {
-  std::string filename = "/home/ikhyeon/unlabeled_data.csv";
-  std::ofstream file(filename);
+  std::ofstream file(unlabeled_data_path_);
   file << "step,slope,roughness,curvature,variance,traversability_label\n";  // header
 
   // Iterate over the grid map

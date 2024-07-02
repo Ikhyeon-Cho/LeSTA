@@ -37,23 +37,23 @@ public:
 
 private:
   ros::NodeHandle nh_{ "height_mapping" };
-  ros::NodeHandle nh2_{ "feature_extraction" };
   ros::NodeHandle pnh_{ "~" };
 
   utils::TransformHandler tf_;  // For pose update
 
-  std::string baselink_frame{ nh_.param<std::string>("baseLinkFrame", "base_link") };
-  std::string map_frame{ nh_.param<std::string>("mapFrame", "map") };
+  std::string baselink_frame{ nh_.param<std::string>("frame_id/base_link", "base_link") };
+  std::string map_frame{ nh_.param<std::string>("frame_id/map", "map") };
 
   // Labeling Parameters
   double footprint_radius_{ pnh_.param<double>("footprintRadius", 0.5) };               // meters
   double max_acceptable_step_{ pnh_.param<double>("maxAcceptableTerrainStep", 0.1) };   // meters
-  double max_acceptable_slope_{ pnh_.param<double>("maxAcceptableTerrainSlope", 20) };  // degrees
+  std::string labeled_data_path_{ pnh_.param<std::string>("pathToLabeledData", "/home/ikhyeon/Downloads") };
+  std::string unlabeled_data_path_{ pnh_.param<std::string>("pathToUnlabeledData", "/home/ikhyeon/Downloads") };
 
   // ROS
-  ros::Subscriber sub_feature_map_{ nh_.subscribe("/traversability_estimation/features/gridmap", 1,
+  ros::Subscriber sub_feature_map_{ pnh_.subscribe("/traversability_estimation/features/gridmap", 1,
                                                   &TraversabilityLabelGeneration::featureMapCallback, this) };
-  ros::Subscriber sub_globalmap_{ nh_.subscribe("/height_mapping/globalmap/pointcloud", 1,
+  ros::Subscriber sub_globalmap_{ pnh_.subscribe("/height_mapping/globalmap/pointcloud", 1,
                                                 &TraversabilityLabelGeneration::generateTraversabilityLabels, this) };
   ros::Publisher pub_labelmap_{ pnh_.advertise<grid_map_msgs::GridMap>("/traversability_learning/label/gridmap", 10) };
 
@@ -63,7 +63,7 @@ private:
 private:
   bool is_labelmap_initialized_{ false };
 
-  bool is_labeling_callback_activated_{ false };
+  bool is_labeling_callback_working_{ false };
 
   void initializeLabelMap();
 
@@ -78,7 +78,7 @@ private:
   void saveUnlabeledDataToCSV(const grid_map::HeightMap& labelmap);
 
   grid_map::HeightMap::Ptr labelmap_;
-  grid_map::GridMap featuremap_;
+  grid_map::HeightMap featuremap_{ 10, 10, 0.1 };
 };
 
 #endif /* TRAVERSABILITY_LABEL_GENERATION_H */

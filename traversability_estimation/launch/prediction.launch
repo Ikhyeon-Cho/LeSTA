@@ -6,12 +6,13 @@
   <!-- Traversability prediction -->
   <node pkg="self_supervised_traversability" type="traversability_prediction_node" name="traversability_prediction"
     output="screen">
-    <rosparam file="$(find self_supervised_traversability)/config/traversability/params.yaml" command="load" />
+    <rosparam file="$(find self_supervised_traversability)/config/traversability_prediction/params.yaml" command="load"
+      subst_value="true" />
   </node>
 
   <!-- Traversability visualization -->
   <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_visualization" output="screen">
-    <rosparam file="$(find self_supervised_traversability)/config/traversability/visualization.yaml" />
+    <rosparam file="$(find self_supervised_traversability)/config/traversability_prediction/visualization.yaml" />
   </node>
 
 </launch>

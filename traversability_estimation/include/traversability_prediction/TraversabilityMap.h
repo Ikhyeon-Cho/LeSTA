@@ -15,8 +15,7 @@
 #include <pcl/point_types.h>
 #include <Eigen/Dense>
 #include "label_generation/TraversabilityInfo.h"
-
-class TraversabilityClassifier;
+#include "traversability_prediction/classifiers/LearnedTraversability.h"
 
 namespace grid_map
 {
@@ -27,43 +26,34 @@ public:
 
   TraversabilityMap(const HeightMap& map);
   TraversabilityMap(double map_length_x, double map_length_y, double resolution);
-  bool initializeFrom(const HeightMap& map);
 
-  void update();
+  bool loadTraversabilityModel(const std::string& model_path);
+
+  void estimateTraversability();
 
 private:
-  bool predict(const grid_map::Index& index, const TraversabilityClassifier& classifier);
-  void recursiveUpdate(const grid_map::Index& index);
+  void maskInvalidCells();
+
+  void getValidInputs();
+
+  void inference();
+
+  void mapping();
+
+  float logOddsUpdate(float prior, float likelihood);
+
+  enum CellValidity
+  {
+    INVALID = 0,
+    VALID = 1
+  };
+
+  std::vector<std::string> traversability_layers_{ "traversability_prediction", "traversability_mapping" };
+  TraversabilityClassifierBase::Ptr classifier_{ std::make_unique<LearnedTraversability>() };
+  bool is_classifier_loaded_{ false };
+  std::vector<int> validity_mask_;
+  std::vector<std::vector<float>> valid_inputs_;
 };
 }  // namespace grid_map
-
-class TraversabilityClassifier
-{
-public:
-  TraversabilityClassifier() = default;
-
-  float classifyTraversabilityAt(const grid_map::TraversabilityMap& map, const grid_map::Index& index) const
-  {
-    const auto& step = map.at("step", index);
-    const auto& slope = map.at("slope", index);
-    const auto& roughness = map.at("roughness", index);
-    const auto& curvature = map.at("curvature", index);
-    const auto& variance = map.at("variance", index);
-
-    // [1] TODO: Bring MLP classifier here
-
-    // [2] Comparison Method: Rule-based classifier -> use slope
-    float min_slope = 0;
-    float max_slope = 30;
-    // scaled slope: 1 for 0, 0 for 30
-    auto scaled_slope = (slope - min_slope) / (max_slope - min_slope);
-    if (scaled_slope < 0)
-      scaled_slope = 0;
-    if (scaled_slope > 1)
-      scaled_slope = 1;
-
-    return 1 - scaled_slope;
-  }
-};
 
 #endif  // TRAVERSABILITY_MAP_H

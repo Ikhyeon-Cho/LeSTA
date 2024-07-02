@@ -24,14 +24,19 @@ class TraversabilityPrediction
 public:
   TraversabilityPrediction();
 
+  void initializeFrom(const grid_map::HeightMap& featuremap);
+
   void featureMapCallback(const grid_map_msgs::GridMapConstPtr& msg);
 
 private:
   ros::NodeHandle nh_priv_{ "~" };
 
   // Frame Ids
-  std::string baselink_frame{ nh_priv_.param<std::string>("/frame_id/base_link", "base_link") };
-  std::string map_frame{ nh_priv_.param<std::string>("/frame_id/map", "map") };
+  std::string baselink_frame{ nh_priv_.param<std::string>("/height_mapping/frame_id/base_link", "base_link") };
+  std::string map_frame{ nh_priv_.param<std::string>("/height_mapping/frame_id/map", "map") };
+
+  std::string traversability_model_path_{ nh_priv_.param<std::string>("traversabilityModel",
+                                                                      "/home/ikhyeon/Downloads") };
 
   // ROS
   ros::Subscriber sub_featuremap_{ nh_priv_.subscribe("/traversability_estimation/features/gridmap", 10,
@@ -41,7 +46,9 @@ private:
 
 private:
   // arbitrary values: real size will be determined by the input map
-  grid_map::TraversabilityMap trav_map_{ 10, 10, 0.1 };
+  grid_map::HeightMap heightmap_{ 10, 10, 0.1 };
+  grid_map::TraversabilityMap map_{ 10, 10, 0.1 };
+  bool is_map_initialized_{ false };
 };
 
 #endif  // TRAVERSABILITY_PREDICTION_H

@@ -1,5 +1,5 @@
 learning_rate: 0.001
-num_epochs: 20
+num_epochs: 2000
 batch_size: 32
 test_size: 0.2
 random_seed: 42
