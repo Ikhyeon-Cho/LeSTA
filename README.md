@@ -1,9 +1,26 @@
-# Traversability Mapping ROS Package
+<div align="center">
 
-## Overview
-The Traversability Mapping ROS package is designed for outdoor mobile robot navigation. This package provides tools and functionalities for robots to navigate through various outdoor terrains by assessing terrain traversability.
+LeSTA: Learning Self-supervised Traversabiltiy with Navigation Experiences of Mobile Robots
+---
+<div>
+<br>
 
-**README will be updated soon!**
+[🛠️ Installation](#get-the-data) | [🎥 Video]() | [📖 Paper (RA-L)](https://ieeexplore.ieee.org/document/10468651)
+
+**README will be updated soon! (Jul'15)**
+<br>
+
+<div align="left">
+<div>
+
+## What is LeSTA
+**LeSTA aims to learn robot-specific traversability in a self-supervised manner by using a short period of manual driving.**
+
+## How to use LeSTA
+
+### Dependency
+
+
 
 <!-- ## Repository Contents
 - `config`: Configuration files.
@@ -49,7 +66,7 @@ To start with local traversability mapping, use command
 This is the main Robot-Centric Elevation Mapping node. It uses the distance sensor measurements and the pose and covariance of the robot to generate an elevation map with variance estimates. -->
 
 
-#### Subscribed Topics
+<!-- #### Subscribed Topics -->
 
 <!-- * **`/points`** ([sensor_msgs/PointCloud2])
 
@@ -327,3 +344,19 @@ This is the main Robot-Centric Elevation Mapping node. It uses the distance sens
     mode.
   - In between: A higher value puts more bias on the existing, prior estimate. A convex combination of both height and variance between
     estimate and measurement will be formed to initialize the new gaussian height distribution. -->
+
+## Citation
+Thank you for citing [our paper](https://ieeexplore.ieee.org/document/10468651) if this helps your research projects:
+> Ikhyeon Cho, and Woojin Chung. **'Learning Self-Supervised Traversability With Navigation Experiences of Mobile Robots: A Risk-Aware Self-Training Approach'**, *IEEE Robotics and Automation Letters, 2024*.
+```bibtex
+@article{cho2024traversability,
+  title={Learning Self-Supervised Traversability With Navigation Experiences of Mobile Robots: A Risk-Aware Self-Training Approach}, 
+  author={Cho, Ikhyeon and Chung, Woojin},
+  journal={IEEE Robotics and Automation Letters}, 
+  year={2024},
+  volume={9},
+  number={5},
+  pages={4122-4129},
+  doi={10.1109/LRA.2024.3376148}
+}
+```
