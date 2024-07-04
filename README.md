@@ -349,7 +349,7 @@ This is the main Robot-Centric Elevation Mapping node. It uses the distance sens
 Thank you for citing [our paper](https://ieeexplore.ieee.org/document/10468651) if this helps your research projects:
 > Ikhyeon Cho, and Woojin Chung. **'Learning Self-Supervised Traversability With Navigation Experiences of Mobile Robots: A Risk-Aware Self-Training Approach'**, *IEEE Robotics and Automation Letters, 2024*.
 ```bibtex
-@article{cho2024traversability,
+@article{cho2024learning,
   title={Learning Self-Supervised Traversability With Navigation Experiences of Mobile Robots: A Risk-Aware Self-Training Approach}, 
   author={Cho, Ikhyeon and Chung, Woojin},
   journal={IEEE Robotics and Automation Letters}, 
@@ -358,5 +358,18 @@ Thank you for citing [our paper](https://ieeexplore.ieee.org/document/10468651) 
   number={5},
   pages={4122-4129},
   doi={10.1109/LRA.2024.3376148}
+}
+```
+
+You can also check [the paper](https://ieeexplore.ieee.org/document/9561394) of our baseline:
+> Hyunsuk Lee, and Woojin Chung. **'A Self-Training Approach-Based Traversability Analysis for Mobile Robots in Urban Environments'**, *IEEE International Conference on Robotics and Automation (ICRA), 2021*.
+```bibtex
+@inproceedings{lee2021self,
+  title={A self-training approach-based traversability analysis for mobile robots in urban environments},
+  author={Lee, Hyunsuk and Chung, Woojin},
+  booktitle={2021 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={3389--3394},
+  year={2021},
+  organization={IEEE}
 }
 ```
