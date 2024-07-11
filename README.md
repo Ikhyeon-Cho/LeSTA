@@ -1,7 +1,8 @@
 <div align="center">
 
-LeSTA: Learning Self-supervised Traversabiltiy with Navigation Experiences of Mobile Robots
----
+<!-- Title -->
+## LeSTA: Learning Self-supervised Traversabiltiy with Navigation Experiences of Mobile Robots
+
 <div>
 <br>
 
@@ -21,18 +22,7 @@ LeSTA: Learning Self-supervised Traversabiltiy with Navigation Experiences of Mo
 ### Dependency
 
 
-
-<!-- ## Repository Contents
-- `config`: Configuration files.
-- `include`: Header files.
-- `launch`: ROS launch files.
-- `rviz`: RViz configuration files.
-- `src`: Source code.
-- `.clang-format`: Clang format configuration.
-- `.gitignore`: Git ignore file.
-- `CMakeLists.txt`: CMake configuration file.
-- `package.xml`: Package metadata file.
-
+<!-- 
 
 ## Installation
 ### Dependencies
