@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="traversability_learning_api",
+    name="lesta_api",
     version="0.1",
     author="Ikhyeon Cho",
     author_email="tre0430@korea.ac.kr",

@@ -1,5 +1,7 @@
+data_root: "data/labeled_data.csv"
+checkpoint_root: "checkpoints/mlp_classifier.pth"
 learning_rate: 0.001
-num_epochs: 2000
+num_epochs: 30
 batch_size: 32
-test_size: 0.2
+test_ratio: 0.2
 random_seed: 42

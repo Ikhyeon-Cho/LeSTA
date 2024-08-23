@@ -1,51 +1,94 @@
 import torch
-import torch.optim as optim
 import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
+
+from lesta_api.models import MLPClassifier
+from lesta_api.dataloader import TraversabilityDataset
+
+import os
+from tqdm import tqdm
 import yaml
-from traversability_learning_api.models.mlp import MLPClassifier
-from traversability_learning_api.dataloader import preprocess_data
 
 
-def train_model(model, criterion, optimizer, X_train_tensor, y_train_tensor, num_epochs):
-    for epoch in range(num_epochs):
-        model.train()
-        optimizer.zero_grad()
-        outputs = model(X_train_tensor)
-        loss = criterion(outputs, y_train_tensor)
-        loss.backward()
-        optimizer.step()
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+def train_model(net, dataloader_dict, criterion, optimizer, num_epochs):
+
+    for epoch in range(num_epochs):  # epoch loop
+        print()
+        print('-----------')
+        print(f'Epoch [{epoch+1}/{num_epochs}]')
+
+        for phase in ['train', 'val']:  # training & validation loop per epoch
+            if phase == 'train':
+                net.train()
+            else:
+                net.eval()
+
+            epoch_loss = 0.0
+            epoch_corrects = 0
+
+            for inputs, labels in tqdm(dataloader_dict[phase]):
+                # initialize optimizer
+                optimizer.zero_grad()
+
+                # forward pass
+                with torch.set_grad_enabled(phase == 'train'):
+                    outputs = net(inputs)
+                    loss = criterion(outputs, labels)
+                    preds = (outputs > 0.5).float()
+
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+                    epoch_loss += loss.item() * inputs.size(0)
+                    epoch_corrects += torch.sum(preds == labels.data)
+
+            epoch_loss = epoch_loss / \
+                len(dataloader_dict[phase].dataset)
+            epoch_acc = epoch_corrects.double(
+            ) / len(dataloader_dict[phase].dataset)
+
+            print(f'{phase} Loss: {
+                epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
 
-with open('/home/ikhyeon/ros/test_ws/src/traversability_learning/self_supervised_learning/config/training_params.yaml', 'r') as file:
-    config = yaml.safe_load(file)
+if __name__ == '__main__':
 
-file_path = '/home/ikhyeon/ros/test_ws/src/traversability_learning/self_supervised_learning/data/labeled_data.csv'
-X_train_tensor, X_test_tensor, y_train_tensor, y_test_tensor = preprocess_data(
-    file_path, config['test_size'], config['random_seed'])
+    # self_supervised_learning directory
+    project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(project_path, 'config', 'training_params.yaml')
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
 
-input_dim = X_train_tensor.shape[1]
-model = MLPClassifier(input_dim)
+    csv_dataset_path = os.path.join(project_path, config['data_root'])
+    checkpoint_save_path = os.path.join(
+        project_path, config['checkpoint_root'])
 
-criterion = nn.BCELoss()
-optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+    dataset = TraversabilityDataset(csv_file=csv_dataset_path)
+    batch_size = config['batch_size']
+    num_epochs = config['num_epochs']
+    lr = config['learning_rate']
+    test_ratio = config['test_ratio']
+    manual_seed = config['random_seed']
 
+    input_dim = dataset.features.shape[1]
+    network = MLPClassifier(input_dim=input_dim)
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(network.parameters(), lr=lr)
 
-train_model(model, criterion, optimizer, X_train_tensor,
-            y_train_tensor, config['num_epochs'])
+    train_dataset, val_dataset = dataset.random_split(
+        test_ratio=test_ratio, manual_seed=manual_seed)
+    dataloader_dict = {
+        'train': DataLoader(train_dataset, batch_size=batch_size, shuffle=True),
+        'val': DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    }
 
-# Save libtorch checkpoints
-# torch.save(model.state_dict(), 'checkpoints/mlp_classifier.pth')
-model.eval()
+    # train
+    train_model(network, dataloader_dict, criterion, optimizer, num_epochs)
 
-traced_model = torch.jit.script(model)
-traced_model.save('/home/ikhyeon/ros/test_ws/src/traversability_learning/self_supervised_learning/checkpoints/mlp_classifier.pth')
-# torch.save(traced_model.state_dict(), '/home/ikhyeon/ros/test_ws/src/traversability_learning/self_supervised_learning/checkpoints/mlp_classifier.pth')
-
-# Testing the model
-with torch.no_grad():
-    test_outputs = model(X_test_tensor)
-    predictions = (test_outputs > 0.5).float()
-    accuracy = (predictions.eq(y_test_tensor).sum() /
-                y_test_tensor.shape[0]).item()
-    print(f'Accuracy: {accuracy:.4f}')
+    # save trained checkpoints in libtorch format
+    network.eval()
+    traced_model = torch.jit.script(network)
+    traced_model.save(checkpoint_save_path)
+    print(f'Model saved at {checkpoint_save_path}')
