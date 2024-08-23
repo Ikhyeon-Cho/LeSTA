@@ -1,16 +1,16 @@
 <launch>
   <!-- Terrain Feature Extraction -->
-  <include file="$(find self_supervised_traversability)/launch/feature_extraction.launch" />
+  <include file="$(find lesta)/launch/feature_extraction.launch" />
 
   <!-- Traversability Label Generation -->
-  <node pkg="self_supervised_traversability" type="label_generation_node" name="label_generation" output="screen">
-    <rosparam file="$(find self_supervised_traversability)/config/label_generation/params.yaml" command="load"
+  <node pkg="lesta" type="label_generation_node" name="label_generation" output="screen">
+    <rosparam file="$(find lesta)/config/label_generation/params.yaml" command="load"
       subst_value="true" />
   </node>
 
   <!-- Traversability Label Visualization -->
   <node pkg="grid_map_visualization" type="grid_map_visualization" name="label_visualization" output="log">
-    <rosparam file="$(find self_supervised_traversability)/config/label_generation/visualization.yaml" />
+    <rosparam file="$(find lesta)/config/label_generation/visualization.yaml" />
   </node>
 
   <!-- Global mapping -->

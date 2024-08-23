@@ -1,12 +1,12 @@
 <launch>
   <!-- Terrain Feature Extraction -->
-  <node pkg="self_supervised_traversability" type="feature_extraction_node" name="feature_extraction" output="screen">
-    <rosparam file="$(find self_supervised_traversability)/config/feature_extraction/params.yaml" command="load" />
+  <node pkg="lesta" type="feature_extraction_node" name="feature_extraction" output="screen">
+    <rosparam file="$(find lesta)/config/feature_extraction/params.yaml" command="load" />
   </node>
 
   <!-- Feature Map Visualization -->
   <node pkg="grid_map_visualization" type="grid_map_visualization" name="feature_visualization" output="log">
-    <rosparam file="$(find self_supervised_traversability)/config/feature_extraction/visualization.yaml" />
+    <rosparam file="$(find lesta)/config/feature_extraction/visualization.yaml" />
   </node>
 
 </launch>
