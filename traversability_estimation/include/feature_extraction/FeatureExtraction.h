@@ -42,7 +42,7 @@ private:
   ros::Subscriber sub_heightmap_{ nh_priv_.subscribe(heightmap_topic_, 10, &FeatureExtraction::HeightMapCallback,
                                                      this) };
   ros::Publisher pub_featuremap_{ nh_priv_.advertise<grid_map_msgs::GridMap>(
-      "/traversability_estimation/features/gridmap", 1) };
+      "/lesta/feature/gridmap", 1) };
 
 private:
   // arbitrary values: real size will be determined by the input map

@@ -1,7 +1,7 @@
-grid_map_topic: "/traversability_learning/label/gridmap"
+grid_map_topic: "/lesta/label/gridmap"
 grid_map_visualizations:
   # Point cloud
-  - name: "/traversability_learning/label/pointcloud"
+  - name: "/lesta/label/gridmap_vis"
     type: point_cloud
     params:
       layer: elevation
