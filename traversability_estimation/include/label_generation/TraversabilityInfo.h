@@ -13,7 +13,7 @@
 enum class Traversability : int {
     TRAVERSABLE = 1,
     NON_TRAVERSABLE = 0,
-    UNKNOWN = 2,
+    UNKNOWN = -1,
 };
 
 #endif /* TRAVERSABILITY_H_ */

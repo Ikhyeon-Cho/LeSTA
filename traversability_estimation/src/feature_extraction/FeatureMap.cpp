@@ -27,7 +27,7 @@ FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resoluti
   for (const auto& feature_layer : feature_layers)
   {
     addLayer(feature_layer, 0.0f);
-    std::cout << "[@ FeatureMap] Added " << feature_layer << " layer to the height map" << std::endl;
+    std::cout << "[LeSTA @FeatureExtraction] Added " << feature_layer << " layer to the height map" << std::endl;
   }
   auto basic_layers = feature_layers;
   basic_layers.push_back("elevation");
@@ -38,7 +38,7 @@ FeatureMap::FeatureMap(double map_length_x, double map_length_y, double resoluti
   for (const auto& normal_layer : normal_layers)
   {
     addLayer(normal_layer);
-    std::cout << "[@ FeatureMap] Added " << normal_layer << " layer to the height map" << std::endl;
+    std::cout << "[LeSTA @FeatureExtraction] Added " << normal_layer << " layer to the height map" << std::endl;
   }
 }
 

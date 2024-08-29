@@ -13,6 +13,16 @@ find_package(catkin REQUIRED COMPONENTS
     pcl_conversions
     height_map_core
     height_map_msgs
+    message_generation
+)
+
+add_service_files(
+  FILES
+  save_training_data.srv
+)
+generate_messages(
+  DEPENDENCIES
+  std_msgs
 )
 
 catkin_package(
@@ -27,6 +37,7 @@ catkin_package(
     height_map_core
     height_map_msgs
 )
+
 
 ###########
 ## Build ##

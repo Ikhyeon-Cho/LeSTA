@@ -21,7 +21,12 @@
 #include <height_map_msgs/HeightMapMsgs.h>
 #include <std_srvs/Empty.h>
 
+#include "lesta/save_training_data.h"
 #include "label_generation/TraversabilityInfo.h"
+
+#include <filesystem>
+#include <chrono>
+#include <iomanip>
 
 class LabelGeneration
 {
@@ -32,11 +37,9 @@ public:
 
   void updateLabelmapFrom(const grid_map::HeightMap& featuremap);
 
-  void generateTraversabilityLabels();
+  bool visualizeNegativeLabels(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
-  void generateTraversabilityLabels(const sensor_msgs::PointCloud2ConstPtr& cloud);
-
-  bool saveLabeledData(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+  bool saveTrainingData(lesta::save_training_data::Request& req, lesta::save_training_data::Response& res);
 
   struct IndexHash
   {
@@ -76,17 +79,17 @@ private:
   ros::Subscriber sub_feature_map_{ pnh_.subscribe("/lesta/feature/gridmap", 1,
                                                    &LabelGeneration::terrainFeatureCallback, this) };
   ros::Publisher pub_labelmap_local_{ pnh_.advertise<grid_map_msgs::GridMap>("/lesta/label/gridmap", 10) };
-  ros::Publisher pub_labelmap_global_{ pnh_.advertise<sensor_msgs::PointCloud2>("/lesta/label/cloud_global", 10) };
-  ros::Publisher pub_labelmap_region_{ pnh_.advertise<visualization_msgs::Marker>("/lesta/label/map_region", 10) };
+  ros::Publisher pub_labelmap_global_{ pnh_.advertise<sensor_msgs::PointCloud2>("/lesta/label/pointcloud_global", 10) };
+  ros::Publisher pub_labelmap_region_{ pnh_.advertise<visualization_msgs::Marker>("/lesta/label/region_global", 10) };
 
   // ros::ServiceServer
-  ros::ServiceServer labeled_csv_saver_{ pnh_.advertiseService("save_labeled_data", &LabelGeneration::saveLabeledData,
-                                                               this) };
+  ros::ServiceServer negative_label_recorder_{ pnh_.advertiseService("/lesta/show_recorded_labels",
+                                                                     &LabelGeneration::visualizeNegativeLabels, this) };
+  ros::ServiceServer training_data_saver_{ pnh_.advertiseService("/lesta/save_training_data",
+                                                                 &LabelGeneration::saveTrainingData, this) };
 
 private:
   bool is_labelmap_initialized_{ false };
-
-  bool is_labeling_callback_working_{ false };
 
   void initializeLabelMap(const grid_map::HeightMap& featuremap);
 

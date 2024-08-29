@@ -18,7 +18,7 @@ TraversabilityMap::TraversabilityMap(double map_length_x, double map_length_y, d
   for (const auto& trav_layer : traversability_layers_)
   {
     addLayer(trav_layer, (float)Traversability::TRAVERSABLE);
-    std::cout << "[@ TraversabilityMap] Added " << trav_layer << " layer to the height map" << std::endl;
+    std::cout << "[LeSTA @TraversabilityMap] Added " << trav_layer << " layer to the height map" << std::endl;
   }
 }
 TraversabilityMap::TraversabilityMap(const HeightMap& map)
@@ -32,11 +32,11 @@ bool TraversabilityMap::loadTraversabilityModel(const std::string& model_path)
   if (success)
   {
     is_classifier_loaded_ = true;
-    std::cout << "[@ TraversabilityMap] Loaded classifier model from " << model_path << std::endl;
+    std::cout << "[LeSTA @TraversabilityMap] Loaded classifier model from " << model_path << std::endl;
   }
   else
   {
-    std::cerr << "[@ TraversabilityMap] Failed to load classifier model from " << model_path << std::endl;
+    std::cerr << "[LeSTA @TraversabilityMap] Failed to load classifier model from " << model_path << std::endl;
   }
   return success;
 }
@@ -45,7 +45,7 @@ void TraversabilityMap::estimateTraversability()
 {
   if (!is_classifier_loaded_)
   {
-    std::cerr << "[@ TraversabilityMap] Classifier model is not loaded. Skip traversability estimation." << std::endl;
+    std::cerr << "[LeSTA @TraversabilityMap] Classifier model is not loaded. Skip traversability estimation." << std::endl;
     return;
   }
 
