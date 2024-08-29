@@ -1,20 +1,12 @@
 <launch>
-  <!-- Terrain Feature Extraction -->
-  <include file="$(find lesta)/launch/feature_extraction.launch" />
+  <group ns="lesta">
+    <rosparam file="$(find lesta)/config/params.yaml" command="load" />
 
-  <!-- Traversability Label Generation -->
-  <node pkg="lesta" type="label_generation_node" name="label_generation" output="screen">
-    <rosparam file="$(find lesta)/config/label_generation/params.yaml" command="load"
-      subst_value="true" />
-  </node>
+    <!-- Terrain Feature Extraction -->
+    <include file="$(find lesta)/launch/include/feature_extraction.launch.xml" />
 
-  <!-- Traversability Label Visualization -->
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="label_visualization" output="log">
-    <rosparam file="$(find lesta)/config/label_generation/visualization.yaml" />
-  </node>
+    <!-- Traversability Label Generation -->
+    <include file="$(find lesta)/launch/include/label_generation.launch.xml" />
+  </group>
 
-  <!-- Global mapping -->
-  <node pkg="height_mapping" type="global_mapping_node" name="label_mapping">
-    <remap from="/height_mapping/map/gridmap" to="/traversability_learning/label/gridmap" />
-  </node>
 </launch>

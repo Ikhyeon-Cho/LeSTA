@@ -1,0 +1,10 @@
+<launch>
+  <!-- Traversability prediction -->
+  <node pkg="lesta" type="traversability_prediction_node" name="traversability_prediction" output="screen" />
+
+  <!-- Traversability visualization -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_visualization" output="screen">
+    <rosparam file="$(find lesta)/config/traversability_prediction/visualization.yaml" />
+  </node>
+
+</launch>

@@ -1,2 +1,0 @@
-heightMapTopic: "/height_mapping/map/gridmap" # Height map topic from height_mapping package
-normalEstimationRadius: 0.2 # meters

@@ -1,2 +1,0 @@
-traversabilityModel: $(find lesta)/../self_supervised_learning/checkpoints/mlp_classifier.pth
-traversabilityThreshold: 0.5

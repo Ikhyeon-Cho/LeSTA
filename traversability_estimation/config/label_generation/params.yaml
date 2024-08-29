@@ -1,5 +1,0 @@
-footprintRadius: 0.5
-maxAcceptableTerrainStep: 0.1
-recordNegativeLabel: true
-pathToLabeledData: "$(find lesta)/../self_supervised_learning/data/labeled_data.csv"
-pathToUnlabeledData: "$(find lesta)/../self_supervised_learning/data/unlabeled_data.csv"

@@ -1,0 +1,12 @@
+feature_extraction:
+  heightMapTopic: "/height_mapping/map/gridmap" # Height map topic from height_mapping package
+  normalEstimationRadius: 0.2 # meters
+
+label_generation:
+  footprintRadius: 0.5
+  maxAcceptableTerrainStep: 0.1
+  enableNegativeLabeler: false
+
+traversability_prediction:
+  traversabilityModel: $(find lesta)/../self_supervised_learning/checkpoints/mlp_classifier.pth
+  traversabilityThreshold: 0.5
