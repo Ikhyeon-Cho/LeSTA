@@ -75,11 +75,11 @@ private:
   // ROS
   ros::Subscriber sub_feature_map_{ pnh_.subscribe("/lesta/feature/gridmap", 1,
                                                    &LabelGeneration::terrainFeatureCallback, this) };
-  ros::Subscriber sub_globalmap_{ pnh_.subscribe("/height_mapping/globalmap/pointcloud", 1,
-                                                 &LabelGeneration::generateTraversabilityLabels, this) };
   ros::Publisher pub_labelmap_local_{ pnh_.advertise<grid_map_msgs::GridMap>("/lesta/label/gridmap", 10) };
-  ros::Publisher pub_labelmap_global_{ pnh_.advertise<sensor_msgs::PointCloud2>("/lesta/label/pointcloud", 10) };
+  ros::Publisher pub_labelmap_global_{ pnh_.advertise<sensor_msgs::PointCloud2>("/lesta/label/cloud_global", 10) };
+  ros::Publisher pub_labelmap_region_{ pnh_.advertise<visualization_msgs::Marker>("/lesta/label/map_region", 10) };
 
+  // ros::ServiceServer
   ros::ServiceServer labeled_csv_saver_{ pnh_.advertiseService("save_labeled_data", &LabelGeneration::saveLabeledData,
                                                                this) };
 
@@ -101,7 +101,7 @@ private:
 
   void recordFootprints();
 
-  void recordNegativeLabel(grid_map::HeightMap& map);
+  void recordNegativeLabel();
 
   void recordUnknownAreas(grid_map::HeightMap& labelmap);
 
