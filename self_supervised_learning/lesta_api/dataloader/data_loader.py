@@ -7,8 +7,6 @@ import pandas as pd
 class TraversabilityDataset(Dataset):
     def __init__(self, csv_file, transform=None):
         self.dataframe = pd.read_csv(csv_file)
-        # self.labels = torch.tensor(
-        # self.data[label_column].values, dtype=torch.float32).unsqueeze(1)
         self.features = torch.tensor(self.dataframe.drop(
             "traversability_label", axis=1).values, dtype=torch.float32)
         self.labels = torch.tensor(
