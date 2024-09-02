@@ -1,6 +1,6 @@
 <launch>
   <group ns="lesta">
-    <rosparam file="$(find lesta)/config/params.yaml" command="load" />
+    <rosparam file="$(find lesta)/config/params.yaml" command="load" subst_value="true" />
 
     <!-- Terrain Feature Extraction -->
     <include file="$(find lesta)/launch/include/feature_extraction.launch.xml" />

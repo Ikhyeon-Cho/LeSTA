@@ -39,10 +39,10 @@ private:
                                                                       "/home/ikhyeon/Downloads") };
 
   // ROS
-  ros::Subscriber sub_featuremap_{ nh_priv_.subscribe("/traversability_estimation/features/gridmap", 10,
+  ros::Subscriber sub_featuremap_{ nh_priv_.subscribe("/lesta/feature/gridmap", 10,
                                                       &TraversabilityPrediction::featureMapCallback, this) };
   ros::Publisher pub_traversabilitymap_{ nh_priv_.advertise<grid_map_msgs::GridMap>(
-      "/traversability_estimation/map/gridmap", 1) };
+      "/lesta/traversability/gridmap", 1) };
 
 private:
   // arbitrary values: real size will be determined by the input map
