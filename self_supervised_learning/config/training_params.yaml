@@ -2,7 +2,7 @@ labeled_data_root: "data/labeled_data.csv"
 unlabeled_data_root: "data/unlabeled_data.csv"
 learning_rate: 0.001
 num_epochs: 30
-batch_size: 32
+batch_size: 128
 random_seed: 42
 test_ratio: 0.2
 
