@@ -1,8 +1,13 @@
+# Data paths for the labeled and unlabeled data
 labeled_data_root: "data/labeled_data.csv"
 unlabeled_data_root: "data/unlabeled_data.csv"
+
+# Training parameters 
+self_training_iterations: 10
+pseudo_labeling_threshold: 0.9 # Confidence threshold for pseudo-labeling
 learning_rate: 0.001
-num_epochs: 30
-batch_size: 128
+num_epochs: 10
+batch_size: 32
 random_seed: 42
 test_ratio: 0.2
 
