@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from lesta_api.model import MLPClassifier
 from lesta_api.dataloader import TraversabilityDataset
-from lesta_api.loss import RiskAwareCELoss, EntropyRegularization
+from lesta_api.loss import RiskSensitiveCELoss, EntropyRegularization
 
 import os
 from tqdm import tqdm
@@ -13,7 +13,7 @@ import yaml
 import pandas as pd
 
 
-def train_model(net, dataloader_dict, criterion, optimizer, num_epochs):
+def train_model(net, dataloader_dict, loss_fn, optimizer, num_epochs):
 
     for epoch in range(num_epochs):  # epoch loop
 
@@ -36,7 +36,7 @@ def train_model(net, dataloader_dict, criterion, optimizer, num_epochs):
                 # forward pass
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = net(inputs)
-                    loss = criterion(outputs, labels)
+                    loss = loss_fn(outputs, labels)
                     preds = (outputs > 0.5).float()  # binary classification
 
                     if phase == 'train':
@@ -240,7 +240,7 @@ if __name__ == '__main__':
         'val': DataLoader(val_dataset, batch_size=batch_size, shuffle=False),
         "unlabeled": DataLoader(unlabeled_dataset, batch_size=len(unlabeled_dataset), shuffle=False)
     }
-    print(f'Initial training samples: {len(train_dataset)}')
+    print(f'Training samples: {len(train_dataset)}')
     print(f'Validation samples: {len(val_dataset)}')
     print(f'Unlabeled samples: {len(unlabeled_dataset)}')
 
@@ -248,25 +248,25 @@ if __name__ == '__main__':
     feature_dim = labeled_dataset.features.shape[1]
     traversability_network = MLPClassifier(input_dim=feature_dim)
     loss_fn = nn.BCELoss()
+    loss_fn = RiskSensitiveCELoss(train_dataset)
     optimizer = optim.Adam(traversability_network.parameters(), lr=lr)
-    entropy_regularizer = EntropyRegularization(lambda_reg=0.1)
 
-    # train
-    try:
-        self_training(traversability_network, dataloader_dict,
-                      loss_fn=loss_fn,
-                      optimizer=optimizer,
-                      num_epochs=num_epochs,
-                      confidence_threshold=confidence_threshold,
-                      max_iter=self_training_iter)
+    # # train
+    # try:
+    #     self_training(traversability_network, dataloader_dict,
+    #                   loss_fn=loss_fn,
+    #                   optimizer=optimizer,
+    #                   num_epochs=num_epochs,
+    #                   confidence_threshold=confidence_threshold,
+    #                   max_iter=self_training_iter)
 
-        print('\033[32m\nTraining completed. Saving model for LibTorch...\033[0m')
+    #     print('\033[32m\nTraining completed. Saving model for LibTorch...\033[0m')
 
-        checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
-        save_for_libtorch(traversability_network, checkpoint_path)
+    #     checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
+    #     save_for_libtorch(traversability_network, checkpoint_path)
 
-    except KeyboardInterrupt:
-        print('\033[32m\nTraining interrupted. Saving model for LibTorch...\033[0m')
+    # except KeyboardInterrupt:
+    #     print('\033[32m\nTraining interrupted. Saving model for LibTorch...\033[0m')
 
-        checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
-        save_for_libtorch(traversability_network, checkpoint_path)
+    #     checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
+    #     save_for_libtorch(traversability_network, checkpoint_path)

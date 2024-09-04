@@ -1,1 +1,1 @@
-from .risk_aware_loss import *
+from .risk_sensitive_loss import *
