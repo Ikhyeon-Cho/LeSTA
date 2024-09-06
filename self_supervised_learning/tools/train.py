@@ -29,13 +29,17 @@ def train_model(net, dataloader_dict, loss_fn, optimizer, num_epochs):
             epoch_loss = 0.0
             epoch_corrects = 0
 
-            for inputs, labels in tqdm(dataloader_dict[phase]):
-                # initialize optimizer
-                optimizer.zero_grad()
+            for inputs, labels, weights in tqdm(dataloader_dict[phase]):
+                optimizer.zero_grad()  # initialize optimizer
 
-                # forward pass
+                # Forward pass
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = net(inputs)
+
+                    # Create BCELoss dynamically with the batch-specific weights
+                    loss_fn = nn.BCELoss(
+                        weight=weights, reduction='mean')
+
                     loss = loss_fn(outputs, labels)
                     preds = (outputs > 0.5).float()  # binary classification
 
@@ -55,21 +59,21 @@ def train_model(net, dataloader_dict, loss_fn, optimizer, num_epochs):
             print()
 
 
-def pseudo_labeling(net, unlabeled_dataset, threshold):
+def pseudo_labeling(net, unlabeled_set, threshold):
 
     net.eval()
     pseudo_labeled_data = []
     pseudo_labels = []
 
-    if len(unlabeled_dataset) == 0:
+    if len(unlabeled_set) == 0:
         print('No unlabeled samples to pseudo-label.')
         return None, None
 
     with torch.no_grad():
 
         unlabeled_dataloader = DataLoader(
-            unlabeled_dataset,
-            batch_size=len(unlabeled_dataset),
+            unlabeled_set,
+            batch_size=len(unlabeled_set),
             shuffle=False)
 
         for inputs, _ in tqdm(unlabeled_dataloader):
@@ -98,10 +102,14 @@ def pseudo_labeling(net, unlabeled_dataset, threshold):
                     torch.zeros_like(confident_preds_negatives).unsqueeze(1))
 
     # Remove pseudo-labeled data from the unlabeled dataset
-    unconfident_mask = ~confident_mask & ~confident_mask_negatives
-    remaining_unlabeled_dataset = TraversabilityDataset(
-        features=unlabeled_dataset.features[torch.where(unconfident_mask)[0]],
-        labels=unlabeled_dataset.features[torch.where(unconfident_mask)[0]])
+    unlabeled_mask = ~confident_mask & ~confident_mask_negatives
+    remaining_features = unlabeled_set.features[torch.where(unlabeled_mask)[0]]
+    remaining_labels = unlabeled_set.labels[torch.where(unlabeled_mask)[0]]
+
+    if len(remaining_features) > 0:
+        remaining_unlabeled_dataset = TraversabilityDataset(
+            features=remaining_features,
+            labels=remaining_labels)
 
     if len(pseudo_labeled_data) > 0:
         pseudo_labeled_data = torch.cat(pseudo_labeled_data)
@@ -151,8 +159,7 @@ def self_training(net, dataloader_dict, loss_fn, optimizer, num_epochs,
             break
 
         # Step 3: Add pseudo-labeled data to the labeled dataset
-        dataloader_dict['train'].dataset.append(pseudo_labeled_dataset.features,
-                                                pseudo_labeled_dataset.labels)
+        dataloader_dict['train'].dataset.append(pseudo_labeled_dataset)
 
         # Step 4: Remove pseudo-labeled data from the unlabeled dataset
         dataloader_dict['unlabeled'] = DataLoader(
@@ -165,12 +172,12 @@ def self_training(net, dataloader_dict, loss_fn, optimizer, num_epochs,
         print(f'Remaining unlabeled samples: {
               len(dataloader_dict["unlabeled"].dataset)}')
 
-    # Save pseudo-labeled dataset for visualization
-    pseudo_labeled_path = os.path.join(
-        project_path, "data/pseudo_labeled_dataset.csv")
+    # # Save pseudo-labeled dataset for visualization
+    # pseudo_labeled_path = os.path.join(
+    #     project_path, "data/pseudo_labeled_dataset.csv")
 
-    dataloader_dict['train'].dataset.to_csv(pseudo_labeled_path)
-    print(f'Pseudo-labels saved to {pseudo_labeled_path}')
+    # dataloader_dict['train'].dataset.to_csv(pseudo_labeled_path)
+    # print(f'Pseudo-labels saved to {pseudo_labeled_path}')
 
     return net
 
@@ -248,25 +255,24 @@ if __name__ == '__main__':
     feature_dim = labeled_dataset.features.shape[1]
     traversability_network = MLPClassifier(input_dim=feature_dim)
     loss_fn = nn.BCELoss()
-    loss_fn = RiskSensitiveCELoss(train_dataset)
     optimizer = optim.Adam(traversability_network.parameters(), lr=lr)
 
-    # # train
-    # try:
-    #     self_training(traversability_network, dataloader_dict,
-    #                   loss_fn=loss_fn,
-    #                   optimizer=optimizer,
-    #                   num_epochs=num_epochs,
-    #                   confidence_threshold=confidence_threshold,
-    #                   max_iter=self_training_iter)
+    # train
+    try:
+        self_training(traversability_network, dataloader_dict,
+                      loss_fn=loss_fn,
+                      optimizer=optimizer,
+                      num_epochs=num_epochs,
+                      confidence_threshold=confidence_threshold,
+                      max_iter=self_training_iter)
 
-    #     print('\033[32m\nTraining completed. Saving model for LibTorch...\033[0m')
+        print('\033[32m\nTraining completed. Saving model for LibTorch...\033[0m')
 
-    #     checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
-    #     save_for_libtorch(traversability_network, checkpoint_path)
+        checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
+        save_for_libtorch(traversability_network, checkpoint_path)
 
-    # except KeyboardInterrupt:
-    #     print('\033[32m\nTraining interrupted. Saving model for LibTorch...\033[0m')
+    except KeyboardInterrupt:
+        print('\033[32m\nTraining interrupted. Saving model for LibTorch...\033[0m')
 
-    #     checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
-    #     save_for_libtorch(traversability_network, checkpoint_path)
+        checkpoint_path = os.path.join(project_path, config['checkpoint_root'])
+        save_for_libtorch(traversability_network, checkpoint_path)
