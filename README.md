@@ -8,7 +8,7 @@
 
 [🛠️ Installation](#get-the-data) | [🎥 Video]() | [📖 Paper (RA-L)](https://ieeexplore.ieee.org/document/10468651)
 
-**README will be updated soon! (Jul'15)**
+**🔥 README will be updated soon (About 1 week). Stay tuned! 🔥**
 <br>
 
 <div align="left">
@@ -19,7 +19,7 @@
 
 ## How to use LeSTA
 
-### Dependency
+
 
 
 <!-- 
