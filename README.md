@@ -6,11 +6,15 @@
 <div>
 <br>
 
-[🛠️ Installation](#get-the-data) | [🎥 Video]() | [📖 Paper (RA-L)](https://ieeexplore.ieee.org/document/10468651)
+🛠️ Installation | 🎥 Video | [📖 Paper (RA-L)](https://ieeexplore.ieee.org/document/10468651)
 
 **🔥 README will be updated soon (About 1 week). Stay tuned! 🔥**
 <br>
 
+<p align='center'>
+    <img src="docs/figure1.png" alt="demo" width="340"/>
+    <img src="docs/Learned LiDAR Traversability.gif" alt="demo" width="400"/>
+</p>
 <div align="left">
 <div>
 
