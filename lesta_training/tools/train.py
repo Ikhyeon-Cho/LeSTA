@@ -3,14 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from lesta_api.model import MLPClassifier
-from lesta_api.dataloader import TraversabilityDataset
-from lesta_api.loss import RiskSensitiveCELoss, EntropyRegularization
+from LeSTA.model import MLPClassifier
+from LeSTA.datasets import TraversabilityDataset
+from LeSTA.loss import RiskSensitiveCELoss, EntropyRegularization
 
 import os
 from tqdm import tqdm
 import yaml
-import pandas as pd
 
 
 def train_model(net, dataloader_dict, loss_fn, optimizer, num_epochs):
@@ -54,8 +53,7 @@ def train_model(net, dataloader_dict, loss_fn, optimizer, num_epochs):
             epoch_acc = epoch_corrects.double(
             ) / len(dataloader_dict[phase].dataset)
 
-            print(f'{phase} Loss: {epoch_loss:.4f} \n{
-                  phase} Acc: {epoch_acc:.4f}')
+            print(f'{phase} Loss: {epoch_loss: .4f} \n{phase} Acc: {epoch_acc: .4f}')
             print()
 
 
@@ -168,9 +166,9 @@ def self_training(net, dataloader_dict, loss_fn, optimizer, num_epochs,
             shuffle=False)
 
         print(f"Added {len(pseudo_labeled_dataset)} new labeled samples.")
-        print(f'New training samples: {len(dataloader_dict['train'].dataset)}')
-        print(f'Remaining unlabeled samples: {
-              len(dataloader_dict["unlabeled"].dataset)}')
+        print(f'New training samples: {len(dataloader_dict["train"].dataset)}')
+        print(
+            f'Remaining unlabeled samples: {len(dataloader_dict["unlabeled"].dataset)}')
 
     # # Save pseudo-labeled dataset for visualization
     # pseudo_labeled_path = os.path.join(
