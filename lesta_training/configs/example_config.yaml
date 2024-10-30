@@ -1,14 +1,16 @@
 # Data paths for the labeled and unlabeled data
-labeled_data_root: "data/labeled_data.csv"
-unlabeled_data_root: "data/unlabeled_data.csv"
+labeled_data_path: "/home/ikhyeon/ros/test_ws/src/lesta/lesta_training/data/labeled_data.csv"
+unlabeled_data_path: "/home/ikhyeon/ros/test_ws/src/lesta/lesta_training/data/unlabeled_data.csv"
 
-# Training parameters 
-self_training_iterations: 10
+# Hyperparameters
+self_training_iterations: 5
 pseudo_labeling_threshold: 0.9 # Confidence threshold for pseudo-labeling
 learning_rate: 0.001
 num_epochs: 10
 batch_size: 32
-random_seed: 42
-test_ratio: 0.2
 
-checkpoint_root: "checkpoints/mlp_classifier.pth"
+# Train / Validation split
+training_ratio: 0.8
+random_seed: 42
+
+checkpoint_path: "/home/ikhyeon/ros/test_ws/src/lesta/lesta_training/checkpoints/mlp_classifier.pth"

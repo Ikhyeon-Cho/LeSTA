@@ -7,10 +7,9 @@ class MLPClassifier(nn.Module):
         self.fc1 = nn.Linear(input_dim, 10)
         self.fc2 = nn.Linear(10, 5)
         self.fc3 = nn.Linear(5, 1)
-        self.sigmoid = nn.Sigmoid()
     
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
-        x = self.sigmoid(self.fc3(x))
+        x = self.fc3(x)
         return x

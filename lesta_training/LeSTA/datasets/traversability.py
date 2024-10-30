@@ -1,144 +1,119 @@
+import os
 import torch
+import numpy as np
 from torch.utils.data import Dataset, random_split
-import pandas as pd
+from LeSTA.datasets.transform import NoWeighting
 
 
 class TraversabilityDataset(Dataset):
-    def __init__(self, csv_file=None, features=None, labels=None):
+    def __init__(self, path=None, features=None, labels=None, transform=None, download=False):
+        """Initialize dataset either from file or from tensors directly"""
 
-        if csv_file:
-            df = pd.read_csv(csv_file)
-            self.features = torch.tensor(
-                df.drop("traversability_label", axis=1).values, dtype=torch.float32)
-            self.labels = torch.tensor(
-                df["traversability_label"].values, dtype=torch.float32).unsqueeze(1)
+        self.dataset_root = path
+        self.transform = transform
+        self.classes = {"traversable": 1,
+                        "non-traversable": 0,
+                        "unknown": -1}
 
-        else:
+        if path is not None:
+            # Initialize from file
+            if not os.path.exists(self.dataset_root) and not download:
+                raise FileNotFoundError(
+                    f"Dataset not found at {self.dataset_root}")
+            elif download:
+                self._download()
+            else:
+                # Populate tensors
+                self.features = torch.tensor([])
+                self.labels = torch.tensor([])
+                self._load_data()
+
+        elif features is not None:
+            # Initialize from tensors
             self.features = features
-            self.labels = labels
-
-        if self.__is_labeled(self.labels):
-            self.weights = self.calc_weights()
+            self.labels = labels if labels is not None else torch.ones(
+                len(features), 1) * -1
         else:
-            self.weights = None
+            raise ValueError(
+                "Either path or features and labels must be provided")
+
+        if self.transform is None:
+            self.transform = NoWeighting()
 
     def __len__(self):
         return len(self.features)
 
     def __getitem__(self, idx):
-
-        if self.weights is not None:
-            return self.features[idx], self.labels[idx], self.weights[idx]
+        label = self.labels[idx]
+        if label == 1:  # only apply transform to footprint samples
+            feature, sample_weight = self.transform(self.features[idx])
         else:
-            return self.features[idx], self.labels[idx]
+            feature, sample_weight = NoWeighting()(self.features[idx])
+        return feature, label, sample_weight
 
-    def random_split(self, test_ratio, seed):
-        generator = torch.Generator().manual_seed(seed)
-        test_size = int(test_ratio * len(self))
-        train_size = len(self) - test_size
+    def _load_data(self):
+        """Load csv data from self.dataset_root directory"""
+        data = np.loadtxt(self.dataset_root, delimiter=',', skiprows=1)
+        self.features = torch.tensor(
+            data[:, :-1], dtype=torch.float32)  # All columns except last
+        self.labels = torch.tensor(
+            data[:, -1], dtype=torch.float32).unsqueeze(1)  # label column
 
-        train_subset, test_subset = random_split(
-            self, [train_size, test_size], generator=generator)
-
-        train_dataset = TraversabilityDataset(
-            features=self.features[train_subset.indices],
-            labels=self.labels[train_subset.indices])
-        test_dataset = TraversabilityDataset(
-            features=self.features[test_subset.indices],
-            labels=self.labels[test_subset.indices])
-
-        return train_dataset, test_dataset
-
-    def append(self, new_dataset):
-        self.features = torch.cat([self.features, new_dataset.features], dim=0)
-        self.labels = torch.cat([self.labels, new_dataset.labels], dim=0)
-        self.weights = torch.cat([self.weights, new_dataset.weights], dim=0)
+    def _download(self):
+        raise NotImplementedError(
+            "Downloading is not supported for this dataset")
 
     # for debug purpose
     def to_csv(self, file_path):
-        df = pd.DataFrame(self.features.numpy(),
-                          columns=['step', 'slope', 'roughness', 'curvature', 'variance', 'intrinsic_risk', 'cumulative_risk', 'risk_weight'])
-        df["traversability_label"] = self.labels.numpy().astype(int)
-        df.to_csv(file_path, index=False)
+        header = 'step,slope,roughness,curvature,variance,intrinsic_risk,cumulative_risk,risk_weight,traversability_label'
+        data = np.concatenate([
+            self.features.numpy(),
+            self.labels.numpy().astype(int)
+        ], axis=1)
+        np.savetxt(file_path, data, delimiter=',',
+                   header=header, comments='', fmt='%g')
 
-    def __is_labeled(self, label):
-        if label[0] > -0.5:  # -1 for unlabeled samples
-            return True
+    @staticmethod
+    def random_split(dataset, training_ratio, seed):
 
-    def calc_weights(self):
-        intrinsic_risks = self.__calc_intrinsic_risk()
-        cumulative_risks = self.__calc_cumulative_risk(intrinsic_risks)
-        weights = self.__calc_sample_weights(
-            intrinsic_risks, cumulative_risks)
+        generator = torch.Generator().manual_seed(seed)
+        validation_size = int((1 - training_ratio) * len(dataset))
+        training_size = len(dataset) - validation_size
 
-        return weights
+        # random_split returns a Subset object
+        training_subset, validation_subset = random_split(
+            dataset, [training_size, validation_size], generator=generator)
 
-    def __calc_intrinsic_risk(self):
+        # Convert Subset to TraversabilityDataset
+        training_set = TraversabilityDataset(
+            features=dataset.features[training_subset.indices],
+            labels=dataset.labels[training_subset.indices],
+            transform=dataset.transform
+        )
+        validation_set = TraversabilityDataset(
+            features=dataset.features[validation_subset.indices],
+            labels=dataset.labels[validation_subset.indices],
+            transform=dataset.transform
+        )
 
-        feature_weights = torch.tensor(
-            # step, slope, roughness, curvature, variance
-            [1.0, 1.0, 1.0, 1.0, 1.0])
+        return training_set, validation_set
 
-        # normalize each feature vector to [0, 1]
-        features_min = self.features.min(dim=0).values
-        features_max = self.features.max(dim=0).values
-        features_scaled = (self.features - features_min) / \
-            (features_max - features_min)
 
-        # Calculate intrinsic risk only for footprint samples
-        footprint_mask = (self.labels == 1).squeeze()  # shape: [N]
+if __name__ == "__main__":
 
-        intrinsic_risks = torch.zeros_like(
-            self.features[:, 0]).unsqueeze(1)  # shape: [N, 1]
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    data_path = os.path.join(project_root, "data/labeled_data.csv")
 
-        intrinsic_risks[footprint_mask] = torch.sum(
-            feature_weights * self.features[footprint_mask], dim=1).unsqueeze(1)
+    dataset = TraversabilityDataset(path=data_path,
+                                    download=False)
+    feature, label, weight = dataset[0]
+    print("Feature shape:", feature.shape)
+    print("Label shape:", label.shape)
+    print("Weight shape:", weight.shape)
+    print()
 
-        return intrinsic_risks
-
-    def __calc_cumulative_risk(self, intrinsic_risks):
-
-        # Select intrinsic risks that are non-zero (corresponding to footprint samples)
-        footprint_mask = (intrinsic_risks > 0).squeeze()  # shape: [N]
-        footprint_risks = intrinsic_risks[footprint_mask]  # shape: [N, 1]
-        n_footprints = len(footprint_risks)
-
-        # Sort intrinsic risk
-        _, idx_from_raw_to_sorted = torch.sort(footprint_risks, dim=0)
-        idx_from_raw_to_sorted = idx_from_raw_to_sorted.squeeze()
-
-        # Calculate empirical CDF
-        ranks = torch.arange(1, n_footprints + 1).float().unsqueeze(1)
-        eCDF = ranks / n_footprints
-
-        # Map cumulative risk back to the original order
-        idx_from_sorted_to_raw = torch.zeros_like(idx_from_raw_to_sorted)
-        idx_from_sorted_to_raw[idx_from_raw_to_sorted] = torch.arange(
-            n_footprints)
-
-        cumulative_risks = torch.zeros_like(intrinsic_risks)
-        cumulative_risks[footprint_mask] = eCDF[idx_from_sorted_to_raw]
-
-        return cumulative_risks
-
-    def __calc_sample_weights(self, intrinsic_risks, cumulative_risks):
-
-        sample_weights = torch.zeros_like(intrinsic_risks)
-        sample_weights = intrinsic_risks * cumulative_risks
-
-        # normalize the weights to [0, 1]
-        # note that the minimum risk weight should not be zero
-        non_zero_weights = sample_weights[sample_weights > 0]
-        if len(non_zero_weights) == 0:
-            return torch.ones_like(sample_weights)
-        else:
-            min_weight = non_zero_weights.min()
-            max_weight = non_zero_weights.max()
-
-            sample_weights = (sample_weights - min_weight) / \
-                (max_weight - min_weight)
-
-            # add 1 to avoid zero risk weight
-            sample_weights = 1.0 * sample_weights + 1.0
-
-            return sample_weights
+    training_set, validation_set = TraversabilityDataset.random_split(
+        dataset, training_ratio=0.8, seed=42)
+    print(f"Labeled samples: {len(dataset)}")
+    print(f"Training samples: {len(training_set)}")
+    print(f"Validation samples: {len(validation_set)}")
