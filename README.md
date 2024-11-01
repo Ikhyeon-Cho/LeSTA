@@ -6,7 +6,7 @@
 <div>
 <br>
 
-🛠️ Installation | 🎥 Video | [📖 Paper (RA-L)](https://ieeexplore.ieee.org/document/10468651)
+💻 Installation | 🎥 Video | 📖 [Paper (RA-L)](https://ieeexplore.ieee.org/document/10468651) | 📁 [Dataset](https://github.com/Ikhyeon-Cho/urban-traversability-dataset)
 
 **🔥 README will be updated soon (About 1 week). Stay tuned! 🔥**
 <br>
