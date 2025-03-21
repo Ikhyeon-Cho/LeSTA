@@ -1,7 +1,0 @@
-grid_map_topic: "/lesta/label/gridmap"
-grid_map_visualizations:
-  # Point cloud
-  - name: "/lesta/label/pointcloud_local"
-    type: point_cloud
-    params:
-      layer: elevation

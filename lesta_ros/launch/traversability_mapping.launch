@@ -1,0 +1,12 @@
+<launch>
+  <!-- Traversability Mapping -->
+  <node pkg="lesta" type="trav_mapping_node" name="lesta_trav_mapping" output="screen" >
+
+    <rosparam command="load" subst_value="true" file="$(find lesta)/config/trav_mapping_node.yaml" />
+    <rosparam command="load" subst_value="true" file="$(find lesta)/config/include/feature_extraction_params.yaml" />
+  </node>
+
+  <!-- Rviz -->
+  <node pkg="rviz" type="rviz" name="rviz_traversability_mapping" output="log" args="-d $(find lesta)/launch/include/traversability_mapping.rviz" />
+  
+</launch>

@@ -1,0 +1,17 @@
+<launch>
+  <!-- Traversability Prediction -->
+  <node pkg="lesta" type="trav_prediction_node" name="lesta_trav_prediction" output="screen" >
+
+    <rosparam command="load" subst_value="true" file="$(find lesta)/config/trav_prediction_node.yaml" />
+    <rosparam command="load" subst_value="true" file="$(find lesta)/config/include/feature_extraction_params.yaml" />
+  </node>
+
+  <!-- Feature Visualization -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="trav_feature_visualization" output="log">
+    <rosparam command="load" file="$(find lesta)/config/include/feature_visualization.yaml" />
+  </node>
+
+  <!-- Rviz -->
+  <node pkg="rviz" type="rviz" name="rviz_traversability_prediction" output="log" args="-d $(find lesta)/launch/include/traversability_prediction.rviz" />
+
+</launch>

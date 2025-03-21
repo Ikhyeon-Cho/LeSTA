@@ -1,0 +1,59 @@
+DATASET:
+  type: "pcd_dataset"
+  training_data: "training_set_parkinglot.pcd"
+  validation_data: "validation_set_parkinglot.pcd" # Put a fully labeled dataset here if you have one
+  feature_fields:
+    - step
+    - slope
+    - roughness
+    - curvature
+    # - variance
+  feature_weights:
+    step: 1.0
+    slope: 1.0
+    roughness: 1.0
+    curvature: 1.0
+    # variance: 1.0
+  label_field: "traversability_label"
+  skip_dataset_normalization: &use_normalization_layer true
+
+MODEL:
+  type: "MLP"
+  input_dim: 4
+  hidden_dims: [8, 4]
+  output_dim: 1
+  dropout_rate: 0.2
+  use_normalization_layer: *use_normalization_layer
+
+TRAINER:
+  device: "cpu" # ["cpu", "cuda"]
+
+  ## Self-training
+  max_iterations: 3
+  confidence_threshold: 0.95 # Low value will cause noisy pseudo-labels
+  min_pseudo_labeling_ratio: 0.1 # Termination condition
+
+  ## Training
+  num_epochs: 4
+  batch_size: 128
+  scheduler_period: "epoch" # ['epoch', 'batch']: depends on scheduler type
+  checkpoint_save_period: 1 # [epoch]
+
+  # Logger
+  log_dir: "logs"
+  log_period: 100 # [batch]
+  checkpoint_dir: "checkpoints"
+  save_for_libtorch: true
+  namespace: "LeSTA"
+
+LOSS:
+  type: "risk_sensitive_loss" # ["risk_sensitive_loss", "instance_weighted_loss", "bce_loss"]
+  entropy_coefficient: 0.1
+
+OPTIMIZER:
+  type: "Adam"
+  learning_rate: 0.001
+  Adam_beta1: 0.9
+  Adam_beta2: 0.999
+  scheduler: "exponential" # ["none", "step", "exponential", "plateau"]
+  scheduler_gamma: 0.98 # 0.1 for step, plateau

@@ -1,0 +1,35 @@
+node:
+  lidarscan_topic: "/velodyne/points"
+  map_publish_rate: 1.0        # [Hz], For visualization
+  scan_filter_range: 6.0       # [meter], Distant points are noisy and not useful for mapping
+  visualize_3d_scan: true      # [bool], Visualize the 3D scan mapping in rviz
+  remove_backpoints: true      # [bool], Remove remoter points
+  debug_mode: false
+
+frame_id:
+  robot_frame: "base_link"
+  map_frame: &map_frame "map" 
+
+height_mapper:
+  estimator_type: "StatMean"   # ["StatMean", "KalmanFilter", "MovingAverage"]
+  frame_id: *map_frame
+  map_length_x: 200.0          # [meter]
+  map_length_y: 200.0          # [meter], Adjust these values based on the mapping areas
+  grid_resolution: 0.1         # [meter]
+  min_height_threshold: -0.2   # [meter]
+  max_height_threshold: 1.5    # [meter]
+
+traversability_mapper:
+  model_path: "$(env HOME)/Downloads/LeSTA_campus_road_libtorch.pt"
+  input_dimension: 4
+  feature_fields:
+    - step
+    - slope
+    - roughness
+    - curvature
+    # - elevation_variance
+  binary_threshold: 0.5
+  use_log_odds_update: true    # [bool], Use log odds update
+  learning_rate: 0.7           # [float], Reduces overconfidence
+  prob_min: 0.05               # [float]
+  prob_max: 0.95               # [float], Probability clamp
