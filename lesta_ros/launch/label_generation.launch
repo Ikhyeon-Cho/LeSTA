@@ -1,0 +1,12 @@
+<launch>
+  <!-- Traversability Label Generation -->
+  <node pkg="lesta" type="label_generation_node" name="lesta_label_generation" output="screen" >
+
+    <rosparam command="load" file="$(find lesta)/config/label_generation_node.yaml" />
+    <rosparam command="load" file="$(find lesta)/config/include/feature_extraction_params.yaml" />
+  </node>
+
+  <!-- Rviz -->
+  <node pkg="rviz" type="rviz" name="rviz_label_generation" output="log" args="-d $(find lesta)/launch/include/label_generation.rviz" />
+
+</launch>

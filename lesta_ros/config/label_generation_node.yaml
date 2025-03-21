@@ -1,0 +1,24 @@
+node:
+  lidarscan_topic: "/velodyne/points"
+  map_publish_rate: 1.0            # [Hz], For visualization
+  pose_update_rate: 10.0           # [Hz]
+  visualize_3d_scan: false
+  remove_backpoints: true          # [bool], Remove remoter points
+  debug_mode: false
+
+frame_id:
+  robot_frame: "base_link"
+  map_frame: &map_frame "map"
+
+height_mapper:
+  estimator_type: "StatMean"   # ["StatMean", "KalmanFilter", "MovingAverage"]
+  frame_id: *map_frame
+  map_length_x: 200.0              # [meter]
+  map_length_y: 200.0              # [meter], Adjust these values based on the labeling areas
+  grid_resolution: 0.1             # [meter]
+  min_height_threshold: -0.2       # [meter]
+  max_height_threshold: 1.5        # [meter]
+
+label_generator:
+  footprint_radius: 0.3            # [meter], Circular footprint (within radius = positive label)
+  max_traversable_step: 0.2        # [meter], Step height difference (higher = negative label)

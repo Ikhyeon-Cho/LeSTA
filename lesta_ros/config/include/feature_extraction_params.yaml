@@ -1,0 +1,2 @@
+feature_extractor:
+  pca_radius: 0.2                  # [meter], radius for terrain feature extraction

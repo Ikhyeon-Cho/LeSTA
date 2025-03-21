@@ -11,3 +11,13 @@ libs/
 
 # Ignore CSV files
 *.csv
+
+# Ignore pcd files
+*.pcd
+
+# Ignore rosbag files
+*.bag
+
+# Ignore model files
+*.pth
+*.pt

@@ -1,0 +1,3 @@
+from .bce_loss import BCELoss
+from .instance_weighted_loss import InstanceWeightedLoss
+from .instance_weighted_loss import InstanceWeightedBCEWithLogitLossAndEntropy
