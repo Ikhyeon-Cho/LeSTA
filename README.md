@@ -285,7 +285,7 @@ rosbag play {your-rosbag}.bag --clock -r 2
       </ul>
     </td>
     <td>
-      <a href="https://drive.google.com/drive/folders/1uw8sPogY7JYnmW0mWvCPpyJ0EW3spIVr?usp=drive_link">
+      <a href="https://drive.google.com/drive/folders/1BDJsOmfyDAkVGlSTNL2RdWG2kM7nwt0C?usp=drive_link">
       <img src="https://img.shields.io/badge/Download-Model-blue" /></a>
     </td>
   </tr>
@@ -302,7 +302,7 @@ rosbag play {your-rosbag}.bag --clock -r 2
       </ul>
     </td>
     <td>
-      <a href="https://drive.google.com/drive/folders/1uw8sPogY7JYnmW0mWvCPpyJ0EW3spIVr?usp=drive_link">
+      <a href="https://drive.google.com/drive/folders/1BDJsOmfyDAkVGlSTNL2RdWG2kM7nwt0C?usp=drive_link">
       <img src="https://img.shields.io/badge/Download-Model-blue" /></a>
     </td>
   </tr>
